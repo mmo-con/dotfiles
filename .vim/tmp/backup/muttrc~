@@ -1,0 +1,125 @@
+#=============================[ MUTTRC ]===========================
+#
+#Author: Markus Moll (mmo)
+#Date:   So 31. Aug 16:33:23 CEST 2014
+#
+#For this configuration to work properly, I assume that mutt is installed
+#with the sidebar patch (e.g. package  'mutt-sidebar') and that a gpg
+#installation is present in one of the default bin-paths.
+
+#=========================[ PATH SETTINGS ]=======================
+
+set header_cache     = /media/data/mutt_mails/cache/headers #where to store headers
+set message_cachedir = /media/data/mutt_mails/cache/bodies  #where to store bodies
+set tmpdir           = /media/data/mutt_mails/tmp          #where to keep temp files
+set alias_file       = ~/.mutt/alias_private                #where to store aliases
+set mailcap_path     = ~/.mutt/mailcap                      #mime types
+
+#=======================[ ACCOUNT HANDLING ]======================
+
+#Default mail account to be loaded at startup
+source "~/.mutt/account.gmail"
+
+#Proclaim the mutt addressbook files
+source "~/.mutt/alias_private"
+source "~/.mutt/alias_hacon"
+
+#Quickly switch between mailboxes
+macro index <f4> '<sync-mailbox><enter-command>\
+          source ~/.mutt/account.hacon<enter><change-folder>!<enter>'
+macro index <f5> '<sync-mailbox><enter-command>\
+          source ~/.mutt/account.gmail<enter><change-folder>!<enter>'
+
+#=======================[ MUTT SETTINGS ]=======================
+
+#incoming checks each xyz seconds
+set mail_check = 120
+
+#editing properties
+macro index + "c=<tab><tab><tab>"
+#set charset        = ISO-8859-1          #UTF8
+set editor         = "vim +8"
+set attribution    = "%f schrieb am %d:"
+set sort           = threads
+set sort_aux       = reverse-last-date-received
+set sort_alias     = address
+set reverse_alias
+set date_format    = "%y/%m/%d %H:%M"
+set folder_format  = "%2C %8s %d %t %N %f"
+set index_format   = "[%4C]  %Z  %D  %-25.25n  (%?l?%4l&%4c?) %s"
+set askcc          = yes
+set askbcc         = no
+set reply_self     = no
+set narrow_tree    = no
+set imap_keepalive = 180
+set ignore_linear_white_space = yes
+set auto_tag       = yes
+set connect_timeout = 20
+set imap_idle      = no
+
+set implicit_autoview
+auto_view text/html  application/x-pgp-message
+
+# Pager View Options ---------------------------------
+set pager_index_lines = 15 # number of index lines to show
+set pager_context = 3      # number of context lines to show
+set pager_stop             # don't go to next message automatically
+set menu_scroll            # scroll in menus
+set tilde                  # show tildes like in vim
+unset markers              # no ugly plus signs
+set quote_regexp = "^( {0,4}[>|:#%]| {0,4}[a-z0-9]+[>|]+)+"
+
+set status_chars  = " *%A"
+set status_format = "───[ Folder: %f ]───[%r%m messages%?n? (%n new)?%?d? \
+                     (%d to delete)?%?t? (%t tagged)? ]───%>─%?p?( %p postponed )?───"
+
+set attach_format = "[%D %t] %2n [%-7.7m/%10.10M] %.40d %> [%s] "
+
+set query_command = "abook --mutt-query '%s'"
+macro generic,index,pager \ca "<shell-escape>abook<return>" "launch abook"
+macro index,pager A "<pipe-message>abook --add-email<return>" "add the sender address to abook"
+
+#abook --convert --informat mutt --infile ~/.mutt/aliases --outformat abook --outfile ~/.abook/addressbook
+
+#=======================[ SIDEBAR CONFIG ]=======================
+
+#set sidebar_width=20
+#set sidebar_delim='|'
+#set sidebar_sort=yes
+#set sidebar_visible=yes
+#set sidebar_shortpath=yes
+#color sidebar_new yellow default
+#bind index,pager \CP sidebar-prev
+#bind index,pager \CN sidebar-next
+#bind index,pager \CO sidebar-open
+#macro index b '<enter-command>toggle sidebar_visible<enter>'
+#macro pager b '<enter-command>toggle sidebar_visible<enter>'
+#bind index B bounce-message
+
+#=======================[ PGP SETTINGS ]=======================
+
+set crypt_replysign          = yes
+set crypt_replyencrypt       = yes
+set crypt_replysignencrypted = yes
+set crypt_timestamp          = yes
+set crypt_verify_sig         = yes
+
+set pgp_auto_decode
+set pgp_clearsign_command="gpg --no-verbose --batch --output - --passphrase-fd 0 --armor --textmode --clearsign %?a?-u %a? %f"
+set pgp_decode_command="gpg %?p?--passphrase-fd 0? --no-verbose --batch --output - %f"
+set pgp_decrypt_command="gpg --passphrase-fd 0 --no-verbose --batch --output - %f"
+set pgp_encrypt_only_command="pgpewrap gpg -v --batch --output - --encrypt --textmode --armor --always-trust -- -r %r -- %f"
+set pgp_encrypt_sign_command="pgpewrap gpg --passphrase-fd 0 -v --batch --output - --encrypt --sign %?a?-u %a? --armor --always-trust -- -r %r -- %f"
+set pgp_export_command="gpg --no-verbose --export --armor %r"
+set pgp_import_command="gpg --no-verbose --import -v %f"
+set pgp_list_pubring_command="gpg --no-verbose --batch --with-colons --list-keys %r"
+set pgp_list_secring_command="gpg --no-verbose --batch --with-colons --list-secret-keys %r"
+set pgp_sign_as=0x7A421A4C
+set pgp_sign_command="gpg --no-verbose --batch --output - --passphrase-fd 0 --armor --detach-sign --textmode %?a?-u %a? %f"
+set pgp_timeout=2000
+set pgp_verify_command="gpg --no-verbose --batch --output - --verify %s %f"
+set pgp_verify_key_command="gpg --no-verbose --batch --fingerprint --check-sigs %r"
+
+#=======================[ COLOUR SETTINGS ]=======================
+
+source "~/.mutt/colors/badwolf.muttrc"

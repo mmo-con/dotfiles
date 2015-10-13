@@ -1,0 +1,4 @@
+#include "chess.hpp"
+
+typedef unsigned long long uint64;
+typedef unsigned long uint63;

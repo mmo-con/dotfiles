@@ -1,0 +1,16 @@
+#ifndef GLOBS_H
+#define GLOBS_H
+
+
+#include <stdbool.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "dbg_log.h"
+
+
+typedef unsigned short     uint16;
+typedef unsigned long long uint64;
+typedef unsigned short     square_t;
+
+
+#endif

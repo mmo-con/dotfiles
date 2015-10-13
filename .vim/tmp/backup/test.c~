@@ -1,0 +1,27 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_ALLOC  10
+
+int *error_malloc (size_t n)
+{
+    int *a = malloc (sizeof (int) * n);
+
+    return a;
+}
+
+int main(void)
+{
+    int b[] = {1,2,3};
+    int n;
+
+    for (n = 1; n < MAX_ALLOC; n ++)
+        {
+        int *a = error_malloc (n);
+        a[n] = n;
+        }
+
+    printf ("%i\n", a[3]);
+
+    return 0;
+}

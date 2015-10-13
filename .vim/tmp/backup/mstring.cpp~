@@ -1,0 +1,51 @@
+#include <string.h>
+#include "mstring.hpp"
+
+namespace mmo
+{
+    String::String (const char *cstr)
+    {
+        size_t len;
+
+        if (cstr != nullptr)
+            {
+            for (len = 0; cstr[len] != '\0'; len ++);
+            if (!len)
+                len = 1;
+            }
+        else
+            len = 1;
+
+        str = new char[len];
+        memcpy (str, cstr, len * sizeof (char));
+
+        used = len;
+        max  = len;
+    }
+
+    String::String (const String& s)
+        {
+        used = s.used;
+        max  = s.max;
+
+        if (used)
+            {
+            str = new char[used];
+            memcpy (str, s.str, used);
+            }
+        else
+            str = new char[1] {'\0'};
+        }
+
+    String& operator=(const String& s)
+        {
+        *this {s};
+        return *this;
+        }
+
+    std::ostream& operator<<(std::ostream& out, const String& s)
+    {
+        out << s.str;
+        return out;
+    }
+}

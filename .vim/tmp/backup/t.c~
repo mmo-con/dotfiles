@@ -1,0 +1,122 @@
+#include "stdio.h"
+#include "stdlib.h"
+#include "math.h"
+
+void insertion_sort (int *a, int num);
+void insertion_sort_rec (int *a, int num);
+void selection_sort (int *a, int num);
+void merge (int *a, int l, int m, int r);
+void mergesort (int *a, int left, int right);
+
+int main(void)
+{
+    #define ASIZE 10
+    int i;
+    int a[] = {-1, 2, 3, 9, 10, 2, 2, 3, 5, 8};
+
+    for (i = 0; i < ASIZE; i ++)
+        printf ("%i  ", a[i]);
+
+    printf ("\n");
+    mergesort (a, 0, 9);
+
+    for (i = 0; i < ASIZE; i ++)
+        printf ("%i  ", a[i]);
+
+    return 0;
+}
+
+void insertion_sort (int *a, int num)
+{
+    int i;
+
+    if (a == NULL || num == 0 || num == 1)
+        return;
+
+    for (i = 1; i < num; i ++)
+        {
+        int j;
+        int key = a[i];
+
+        for (j = i - 1; j >= 0 && key < a[j]; j --)
+            a[j + 1] = a[j];
+
+        a[j + 1] = key;
+        }
+}
+
+void selection_sort (int *a, int num)
+{
+    int i;
+
+    for (i = 0; i < num - 1; i ++)
+        {
+        int j;
+        int min = i;
+
+        for (j = i + 1; j < num; j ++)
+            {
+            if (a[j] < a[min])
+                min = j;
+            }
+
+        if (min > i)
+            {
+            int swap = a[i];
+            a[i] = a[min];
+            a[min] = swap;
+            }
+        }
+}
+
+void merge (int *a, int l, int m, int r)
+{
+    int i;
+    int j;
+    int k;
+    int sl = m - l + 1;
+    int sr = r - m;
+    int *left  = malloc (sizeof (int) * (sl));
+    int *right = malloc (sizeof (int) * (sr));
+
+    for (i = 0; i < sl; i ++)
+        left[i] = a[l + i];
+    for (i = 0; i < sr; i ++)
+        right[i] = a[m + 1 + i];
+
+    left[sl]  = 100000;
+    right[sr] = 100000;
+
+    i = 0;
+    j = 0;
+
+    for (k = l; k <= r; k ++)
+        {
+        if (left[i] < right[j])
+            {
+            a[k] = left[i];
+            i ++;
+            }
+        else
+            {
+            a[k] = right[j];
+            j ++;
+            }
+        }
+
+    free (left);
+    free (right);
+}
+
+void mergesort (int *a, int left, int right)
+{
+    if (left < right)
+        {
+        int middle = floor ((right + left) / 2);
+
+        mergesort (a, left, middle);
+        mergesort (a, middle + 1, right);
+
+        merge (a, left, middle, right);
+        }
+}

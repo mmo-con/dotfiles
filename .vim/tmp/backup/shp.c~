@@ -1,0 +1,1110 @@
+/*
+*  SHP.C
+*  =====
+*
+*  Dieses Modul implementiert die grundlegende Funktionalitaet
+*  zum Im- und Export von ESRI-Shapefiles. Ein Whitepaper, auf
+*  dem diese Umsetzung basiert, findet man unter
+*  https://www.esri.com/library/whitepapers/pdfs/shapefile.pdf
+*
+*                              |SHP|
+*   ==========================================================
+*  |MH = Main-Header, RH_i = Record-Header i, C_i = Content i |
+*  |==========================================================|
+*  | MH | RH_0 | C_0 | RH_1 | C_1 | ... | RH_k | C_k          |
+*  |==========================================================|
+*  | 50 | 4    | n_0 | 4    | n_1 | ... | 4    | n_k          |
+*  |==========================================================|
+*  |file_length = 50 + 4*(k + 1) + sum(n_i, 0, k)             |
+*   ==========================================================
+*/
+
+#include "shp.h"
+
+/* Prototypen fuer interne Funktionen */
+/* ---------------------------------- */
+static void shp_init_record_content (void);
+static void shp_init_record_header (void);
+static int16 shp_init_polymorph_shape (shp_record_content_polymorph_t *poly_shape);
+static void shp_fill_main_header (uint32 file_length, shp_type_t shape_type,
+                                  double bb_xmin, double bb_ymin, double bb_xmax,
+                                  double bb_ymax, double bb_zmin, double bb_zmax,
+                                  double bb_mmin, double bb_mmax);
+static int16 shp_fill_point (coordinates_xy *point);
+static int16 shp_fill_polygon (coordinates_xy *point, uint32 anz);
+static int16 shp_serialize_index (FILE *fp, shp_serialize_func_t serialize_func);
+static int16 shp_serialize_content_point (FILE *fp, shp_serialize_func_t serialize_func);
+static int16 shp_serialize_content_polygon (FILE *fp, shp_serialize_func_t serialize_func);
+
+
+/* Implementierung der Schnittstelle */
+/* --------------------------------- */
+
+
+/*
+*  SHP_GET_MAIN_HEADER
+*  ===================
+*
+*  Singleton-Verwaltung fuer den Main-Header
+*
+*  Rueckgabe:
+*    - Pointer auf den Main-Header
+*/
+
+shp_main_header_t *shp_get_main_header (void)
+{
+    static shp_main_header_t shp_main_header;
+
+    return &shp_main_header;
+}
+
+
+/*
+*  SHP_GET_RECORD_CONTENT_ARRAY
+*  ============================
+*
+*  Singleton-Verwaltung fuer das Record-Content-Array.
+*
+*  Rueckgabe:
+*    - Pointer auf das Record-Content-Array
+*/
+
+shp_record_content_array_t *shp_get_record_content_array (void)
+{
+    static shp_record_content_array_t shp_record_content_array;
+
+    return &shp_record_content_array;
+}
+
+
+/*
+*  SHP_GET_RECORD_HEADER_ARRAY
+*  ===========================
+*
+*  Singleton-Verwaltung fuer das Record-Header-Array.
+*
+*  Rueckgabe:
+*    - Pointer auf das Record-Header-Array
+*/
+
+shp_record_header_array_t *shp_get_record_header_array (void)
+{
+    static shp_record_header_array_t shp_record_header_array;
+
+    return &shp_record_header_array;
+}
+
+
+/*
+*  SHP_FILL_MAIN_HEADER
+*  ====================
+*
+*  Befuellt die Main-Header Struktur.
+*
+*  Input:
+*    - Alle nicht konstanten Attribute der Struktur shp_main_header_t
+*/
+
+static void shp_fill_main_header (uint32 file_length, shp_type_t shape_type,
+                                  double bb_xmin, double bb_ymin, double bb_xmax,
+                                  double bb_ymax, double bb_zmin, double bb_zmax,
+                                  double bb_mmin, double bb_mmax)
+{
+    shp_main_header_t *main_header = shp_get_main_header ();
+
+    assert (main_header != NULL);
+
+    main_header->file_code   = SHP_FILECODE_VALUE;
+    main_header->unused[0]   = 0;
+    main_header->unused[1]   = 0;
+    main_header->unused[2]   = 0;
+    main_header->unused[3]   = 0;
+    main_header->unused[4]   = 0;
+    main_header->file_length = SHP_MAIN_HEADER_LENGTH + file_length;
+    main_header->version     = SHP_VERSION;
+    main_header->shape_type  = shape_type;
+    main_header->bb_xmin     = bb_xmin;
+    main_header->bb_ymin     = bb_ymin;
+    main_header->bb_xmax     = bb_xmax;
+    main_header->bb_ymax     = bb_ymax;
+    main_header->bb_zmin     = bb_zmin;
+    main_header->bb_zmax     = bb_zmax;
+    main_header->bb_mmin     = bb_mmin;
+    main_header->bb_mmax     = bb_mmax;
+}
+
+
+/* Interface zu geometrischen Strukturen in HAFAS */
+/* ---------------------------------------------- */
+
+
+/*
+*  SHP_SERIALIZE_FUNC_FILE
+*  =======================
+*
+*  Zum Schreiben von Shape-Daten in eine Datei.
+*
+*  Parameter:
+*    - bytes:      Zu lesende Daten
+*    - bytes_used: Groesse der Daten
+*    - user_data:  User Data
+*
+*  Rueckgabe:
+*    - TRUE:  Daten erfolgreich geschrieben,
+*    - FALSE: sonst
+*/
+
+int16 shp_serialize_func_file (uchar *bytes, int32 bytes_used, void *user_data)
+{
+    FILE *fp = (FILE *)user_data;
+
+    if (fwrite (bytes, bytes_used, 1, fp) != 1)
+        return FALSE;
+
+    return TRUE;
+}
+
+
+/*
+*  SHP_FILL_POINT
+*  ==============
+*
+*  Fuellt die Daten von coordinates_xy in die entsprechenden
+*  Shape-Strukturen.
+*
+*  Parameter:
+*    - point: Zu uebertragender Punkt
+*
+*  Rueckgabe:
+*    - TRUE:  Daten erfolgreich geschrieben,
+*    - FALSE: sonst
+*/
+
+static int16 shp_fill_point (coordinates_xy *point)
+{
+    int32  x_tmp;  /* Externe x-Koordinate als integer */
+    int32  y_tmp;  /* Externe y-Koordinate als integer */
+    double x_ext;  /* Externe x-Koordinate als double  */
+    double y_ext;  /* Externe y-Koordinate als double  */
+    shp_record_header_array_t  *header;
+    shp_record_content_array_t *content;
+
+    if (point == NULL)
+        return FALSE;
+
+    header  = shp_get_record_header_array ();
+    content = shp_get_record_content_array ();
+
+    /* Record-Header fuellen */
+    /* --------------------- */
+    if (header->used >= header->max)
+        ARR_RESIZE (header->shp_record_header_data, shp_record_header_t, header->max,
+                    SHP_RECORD_HEADER_BLOCK_SIZE, "shp_record_header_data");
+
+    header->shp_record_header_data[header->used].record_number  = 1;
+    header->shp_record_header_data[header->used].content_length =
+        SIZE_TO_16BIT_WORD (shp_record_content_point_t);
+    header->shp_record_header_data[header->used].offset =
+        (header->used == 0) ? SHP_MAIN_HEADER_LENGTH
+                            : SHP_RECORD_HEADER_LENGTH +
+                              header->shp_record_header_data[header->used - 1].offset +
+                              header->shp_record_header_data[header->used - 1].content_length;
+    header->used ++;
+
+    /* Record-Content fuellen */
+    /* ---------------------- */
+    if (content->used >= content->max)
+        ARR_RESIZE (content->shp_record_content_data, shp_record_content_data_t,
+                    content->max, SHP_RECORD_CONTENT_BLOCK_SIZE,
+                    "shp_record_content_data");
+
+    hafkoord_to_ext (point->x, point->y, &x_tmp, &y_tmp);
+    x_ext = x_tmp / 1000000.0;
+    y_ext = y_tmp / 1000000.0;
+
+    content->shp_record_content_data[content->used].shp_point.type = SHP_POINT;
+    content->shp_record_content_data[content->used].shp_point.x = x_ext;
+    content->shp_record_content_data[content->used].shp_point.y = y_ext;
+    content->used ++;
+
+    /* Dateigroesse aktualisieren */
+    /* -------------------------- */
+    content->content_length += SHP_RECORD_HEADER_LENGTH;   /* Ein neuer Record-Header  */
+    content->content_length += (sizeof (shp_record_content_point_t) / 2); /* Ein neuer Record-Content */
+
+    /* Bounding-Box aktualisieren */
+    /* -------------------------- */
+    if (content->bb_xmin > x_ext)
+        content->bb_xmin = x_ext;
+    if (content->bb_xmax < x_ext)
+        content->bb_xmax = x_ext;
+    if (content->bb_ymin > y_ext)
+        content->bb_ymin = y_ext;
+    if (content->bb_ymax < y_ext)
+        content->bb_ymax = y_ext;
+
+    return TRUE;
+}
+
+
+/*
+ *  SHP_INIT_POLYMORPH_SHAPE
+ *  ========================
+ *
+ *  Die Funktion initialisiert eine Polymorph-Shape-Struktur.
+ *
+ *  Parameter:
+ *    - poly_shape: Pointer auf die Shape-Struktur
+ *
+ *  Rueckgabe:
+ *    - TRUE:  Struktur erfolgreich befuellt,
+ *    - FALSE: sonst.
+ */
+
+static int16 shp_init_polymorph_shape (shp_record_content_polymorph_t *poly_shape)
+{
+    if (poly_shape == NULL)
+        return FALSE;
+
+    poly_shape->type       = SHP_UNDEFINED;
+    poly_shape->bb_xmin    = MAX_INT32;
+    poly_shape->bb_ymin    = MAX_INT32;
+    poly_shape->bb_xmax    = MIN_INT32;
+    poly_shape->bb_ymax    = MIN_INT32;
+    poly_shape->num_parts  = 0;
+    poly_shape->num_points = 0;
+    poly_shape->parts      = NULL;
+    poly_shape->point      = NULL;
+
+    return TRUE;
+}
+
+
+/*
+*  SHP_FILL_POLYMORPH
+*  ==================
+*
+*  Die Funktion fuellt einen Record-Content des Typs Polymorph.
+*
+*  Parameter:
+*    - poly:          Punktliste fuer (mglw. mehr als) ein Polygon
+*    - shape_type:    Shape-Typ (PolyLine || Polygon)
+*    - num_of_poly:   Anzahl der Polygone in Poly
+*    - num_of_points: Gesamtanzahl der Punkte in poly
+*    - parts:         Array mit Offsets der Parts
+*    - num_of_parts:  Anzahl der Parts in parts
+*    - first:         TRUE:  Erster Aufruf fuer einen Record-Header,
+*                     FALSE: sonst.
+*
+*  Rueckgabe:
+*    - TRUE:  Daten erfolgreich geschrieben,
+*    - FALSE: sonst
+*/
+
+int16 shp_fill_polymorph (coordinates_xy *point, shp_type_t shape_type,
+                          int32 num_of_points, int32 *parts, int32 num_of_parts,
+                          int16 first)
+{
+    int32  idx;    /* Schleifenvariable                */
+    int32  x_tmp;  /* Externe x-Koordinate als integer */
+    int32  y_tmp;  /* Externe y-Koordinate als integer */
+    double x_ext;  /* Externe x-Koordinate als double  */
+    double y_ext;  /* Externe y-Koordinate als double  */
+    shp_record_header_array_t  *header;
+    shp_record_header_t        *hdata;
+    shp_record_content_array_t *content;
+    shp_record_content_data_t  *cdata;
+
+    /* Check Eingangsparameter */
+    /* ----------------------- */
+    if (point == NULL || num_of_points == 0 || parts == NULL || num_of_parts == 0
+            || (shape_type != SHP_POLYLINE && shape_type != SHP_POLYGON))
+        return FALSE;
+
+    header  = shp_get_record_header_array ();
+    hdata   = header->shp_record_header_data;
+    content = shp_get_record_content_array ();
+    cdata   = content->shp_record_content_data;
+
+    /* Record-Header fuellen */
+    /* --------------------- */
+    if (header->used >= header->max)
+        ARR_RESIZE (hdata, shp_record_header_t, header->max,
+                    SHP_RECORD_HEADER_BLOCK_SIZE, "shp_record_header_data");
+
+    /* Beim ersten Record-Content fuer einen Record-Header */
+    /* muss das Housekeeping neu initialisiert werden      */
+    /* --------------------------------------------------- */
+    if (first)
+        {
+        hdata[header->used].record_number = 0;
+        hdata[header->used].content_length = 0;
+        hdata[header->used].offset = 0;
+        }
+
+    /* Record-Content fuellen */
+    /* ---------------------- */
+    if (content->used >= content->max)
+        ARR_RESIZE (cdata, shp_record_content_data_t, content->max,
+                    SHP_RECORD_CONTENT_BLOCK_SIZE, "shp_record_content_data");
+
+    /* Polygon-Shape initialisieren */
+    /* ---------------------------- */
+    if (!shp_init_polymorph_shape (&cdata[content->used].shp_polymorph))
+        return FALSE;
+
+    cdata[content->used].shp_polymorph.parts =
+        (uint32 *)get_memory (num_of_parts * sizeof (uint32), "parts");
+    cdata[content->used].shp_polymorph.point =
+        (shp_point_t *)get_memory (num_of_points * sizeof (shp_point_t), "point");
+
+    cdata[content->used].shp_polymorph.type       = shape_type;
+    cdata[content->used].shp_polymorph.num_parts  = num_of_parts;
+    cdata[content->used].shp_polymorph.num_points = num_of_points;
+
+    /* Polygonen-Punktliste befuellen */
+    /* ------------------------------ */
+    for (idx = 0; idx < num_of_points; idx ++)
+        {
+        hafkoord_to_ext (point[idx].x, point[idx].y, &x_tmp, &y_tmp);
+        x_ext = x_tmp / 1000000.0;
+        y_ext = y_tmp / 1000000.0;
+        cdata[content->used].shp_polymorph.point[idx].x = x_ext;
+        cdata[content->used].shp_polymorph.point[idx].y = y_ext;
+
+        /* Bounding-Box aktualisieren */
+        /* -------------------------- */
+        if (cdata[content->used].shp_polymorph.bb_xmin > x_ext)
+            cdata[content->used].shp_polymorph.bb_xmin = x_ext;
+        if (cdata[content->used].shp_polymorph.bb_xmax < x_ext)
+            cdata[content->used].shp_polymorph.bb_xmax = x_ext;
+        if (cdata[content->used].shp_polymorph.bb_ymin > y_ext)
+            cdata[content->used].shp_polymorph.bb_ymin = y_ext;
+        if (cdata[content->used].shp_polymorph.bb_ymax < y_ext)
+            cdata[content->used].shp_polymorph.bb_ymax = y_ext;
+        }
+
+    /* Parts-Array befuellen */
+    /* --------------------- */
+    for (idx = 0; idx < num_of_parts; idx ++)
+        cdata[content->used].shp_polymorph.parts[idx] = parts[idx];
+
+    /* Record-Header aktualisieren */
+    /* --------------------------- */
+    hdata[header->used].record_number ++;
+    hdata[header->used].content_length += SHP_SIZE_POLYMORPH +
+                                          (num_of_parts * sizeof (uint32) +
+                                           num_of_points * sizeof (shp_point_t)) / 2;
+    hdata[header->used].offset =
+        (header->used == 0) ? SHP_MAIN_HEADER_LENGTH
+                            : SHP_RECORD_HEADER_LENGTH +
+                              hdata[header->used - 1].offset +
+                              hdata[header->used - 1].content_length;
+    header->used ++;
+
+    /* Dateigroesse aktualisieren */
+    /* -------------------------- */
+    content->content_length += SHP_SIZE_POLYMORPH +
+                               (num_of_parts * sizeof (uint32) +
+                                num_of_points * sizeof (shp_point_t)) / 2;
+
+    /* Bounding-Box aktualisieren */
+    /* -------------------------- */
+    if (content->bb_xmin > cdata[content->used].shp_polymorph.bb_xmin)
+        content->bb_xmin = cdata[content->used].shp_polymorph.bb_xmin;
+    if (content->bb_xmax < cdata[content->used].shp_polymorph.bb_xmax)
+        content->bb_xmax = cdata[content->used].shp_polymorph.bb_xmax;
+    if (content->bb_ymin > cdata[content->used].shp_polymorph.bb_ymin)
+        content->bb_ymin = cdata[content->used].shp_polymorph.bb_ymin;
+    if (content->bb_ymax < cdata[content->used].shp_polymorph.bb_ymax)
+        content->bb_ymax = cdata[content->used].shp_polymorph.bb_ymax;
+
+    content->used ++;
+
+    return TRUE;
+}
+
+
+/*
+ *  SHP_FILL_POLYMORPH_ALL
+ *  ======================
+ *
+ *  Die Funktion fuellt alle Polymorph-Contents in die entsprechenden
+ *  Strukturen. Dabei gilt folgende Verweisstruktur:
+ *    offset_header -> offset_parts -> parts -> point
+ *
+ *  Input:
+ *    - point:         Polygon
+ *    - shape_type:    Shape-Typ (PolyLine || Polygon)
+ *    - num_of_points: Anzahl der Punkte in point
+ *    - parts:         Array von Parts (flach) zum Verweis in point
+ *    - num_of_parts:  Gesamte Anzahl an Parts
+ *    - offset_parts:  Offsets fuer parts in parts
+ *    - num_of_offset: Gesamte Anzahl an Offsets
+ *    - offset_header: Offsets fuer header in offset_parts
+ *    - num_of_header: Gesamte Anzahl an Headern
+ *
+ *  Rueckgabe:
+ *    - TRUE:  Der Record wurde vollstaendig befuellt,
+ *    - FALSE: sonst.
+ */
+
+int16 shp_fill_polymorph_all (coordinates_xy *point, shp_type_t shape_type,
+                              int32 num_of_points, int32 *parts, int32 num_of_parts,
+                              int32 *offset_parts, int32 num_of_offset,
+                              int32 *offset_header, int32 num_of_header)
+{
+    int32 oh;
+    int32 op;
+//    shp_record_header_array_t *header;
+    shp_record_content_array_t *content;
+
+    /* Check Eingangsparameter */
+    /* ----------------------- */
+    if (point == NULL || num_of_points == 0 || parts == NULL
+            || offset_parts == NULL || num_of_parts == 0
+            || (shape_type != SHP_POLYLINE && shape_type != SHP_POLYGON))
+        return FALSE;
+
+    shp_init_record_header ();
+    header = shp_get_record_header_array ();
+
+    /* Iteration ueber die Record-Header */
+    /* --------------------------------- */
+    for (oh = 0; oh < num_of_header; oh ++)
+        {
+        int16 first = TRUE;
+        int32 io = (oh < num_of_header - 1) ? offset_header[oh + 1] : num_of_offset;
+
+        /* Iteration ueber die Record-Contents fuer einen Record-Header */
+        /* ------------------------------------------------------------ */
+        for (op = 0; op < io; op ++)
+            {
+            int32 npoints;
+            int32 nparts;
+
+            if (op < num_of_offset - 1)
+                {
+                npoints = parts[offset_parts[op + 1]] - parts[offset_parts[op]] - 1;
+                nparts  = offset_parts[op + 1] - offset_parts[op];
+                }
+            else
+                {
+                npoints = num_of_points - parts[offset_parts[op]] - 1;
+                nparts  = num_of_parts - offset_parts[op];
+                }
+
+            if (!shp_fill_polymorph (point, shape_type, npoints,
+                                     parts, nparts, first))
+                return TRUE;
+
+            first = FALSE;
+
+            /* Pointer weiterschieben */
+            /* ---------------------- */
+            point += npoints;
+            parts += nparts;
+            }
+        }
+
+    content = shp_get_record_content_array ();
+    content->content_filled = TRUE;
+
+    return TRUE;
+}
+
+
+/*
+*  SHP_FILL_POLYGON
+*  ================
+*
+*  Fuellt die Daten von coordinates_xy in die entsprechenden
+*  Shape-Strukturen.
+*
+*  Parameter:
+*    - point: Zu uebertragende Punktfolge
+*    - anz:   Anzahl der Punkte
+*
+*  Rueckgabe:
+*    - TRUE:  Daten erfolgreich geschrieben,
+*    - FALSE: sonst
+*/
+/* :TODO:07.06.2015 23:09:55:mmo: Kann vermutlich weg. */
+static int16 shp_fill_polygon (coordinates_xy *point, uint32 anz)
+{
+    int32  idx;
+    int32  x_tmp;  /* Externe x-Koordinate als integer */
+    int32  y_tmp;  /* Externe y-Koordinate als integer */
+    double x_ext;  /* Externe x-Koordinate als double  */
+    double y_ext;  /* Externe y-Koordinate als double  */
+    shp_record_header_array_t  *header;
+    shp_record_content_array_t *content;
+
+    if (point == NULL || anz == 0)
+        return FALSE;
+
+    header  = shp_get_record_header_array ();
+    content = shp_get_record_content_array ();
+
+    /* Record-Header fuellen */
+    /* --------------------- */
+    if (header->used >= header->max)
+        ARR_RESIZE (header->shp_record_header_data, shp_record_header_t, header->max,
+                    SHP_RECORD_HEADER_BLOCK_SIZE, "shp_record_header_data");
+
+    header->shp_record_header_data[header->used].record_number  = 1;
+    header->shp_record_header_data[header->used].content_length =
+        (4 * 4 + 4 * 8 + anz * sizeof (shp_point_t)) / 2;
+    header->shp_record_header_data[header->used].offset =
+        (header->used == 0) ? SHP_MAIN_HEADER_LENGTH
+                            : SHP_RECORD_HEADER_LENGTH +
+                              header->shp_record_header_data[header->used - 1].offset +
+                              header->shp_record_header_data[header->used - 1].content_length;
+    header->used ++;
+
+    /* Record-Content fuellen */
+    /* ---------------------- */
+    if (content->used >= content->max)
+        ARR_RESIZE (content->shp_record_content_data, shp_record_content_data_t,
+                    content->max, SHP_RECORD_CONTENT_BLOCK_SIZE,
+                    "shp_record_content_data");
+
+    /* Polygon-Shape initialisieren */
+    /* ---------------------------- */
+    if (!shp_init_polymorph_shape (&content->shp_record_content_data[content->used].shp_polymorph))
+        return FALSE;
+
+    content->shp_record_content_data[content->used].shp_polymorph.parts =
+        (uint32 *)get_memory (1 * sizeof (uint32), "parts");
+    content->shp_record_content_data[content->used].shp_polymorph.point =
+        (shp_point_t *)get_memory (anz * sizeof (shp_point_t), "point");
+
+    content->shp_record_content_data[content->used].shp_polymorph.type = SHP_POLYGON;
+    content->shp_record_content_data[content->used].shp_polymorph.num_parts = 1;
+    content->shp_record_content_data[content->used].shp_polymorph.num_points = anz;
+    content->shp_record_content_data[content->used].shp_polymorph.parts[0] = 0;
+
+    for (idx = 0; idx < anz; idx ++)
+        {
+        hafkoord_to_ext (point[idx].x, point[idx].y, &x_tmp, &y_tmp);
+        x_ext = x_tmp / 1000000.0;
+        y_ext = y_tmp / 1000000.0;
+        content->shp_record_content_data[content->used].shp_polymorph.point[idx].x = x_ext;
+        content->shp_record_content_data[content->used].shp_polymorph.point[idx].y = y_ext;
+
+        /* Bounding-Box aktualisieren */
+        /* -------------------------- */
+        if (content->shp_record_content_data[content->used].shp_polymorph.bb_xmin > x_ext)
+            content->shp_record_content_data[content->used].shp_polymorph.bb_xmin = x_ext;
+        if (content->shp_record_content_data[content->used].shp_polymorph.bb_xmax < x_ext)
+            content->shp_record_content_data[content->used].shp_polymorph.bb_xmax = x_ext;
+        if (content->shp_record_content_data[content->used].shp_polymorph.bb_ymin > y_ext)
+            content->shp_record_content_data[content->used].shp_polymorph.bb_ymin = y_ext;
+        if (content->shp_record_content_data[content->used].shp_polymorph.bb_ymax < y_ext)
+            content->shp_record_content_data[content->used].shp_polymorph.bb_ymax = y_ext;
+        }
+
+    /* Dateigroesse aktualisieren */
+    /* -------------------------- */
+    content->content_length += SHP_RECORD_HEADER_LENGTH;   /* Ein neuer Record-Header  */
+    content->content_length += SIZE_TO_16BIT_WORD (shp_record_content_polymorph_t) +
+            (sizeof (uint32) + anz * sizeof (shp_point_t)) / 2;
+
+    /* Bounding-Box aktualisieren */
+    /* -------------------------- */
+    if (content->bb_xmin > content->shp_record_content_data[content->used].shp_polymorph.bb_xmin)
+        content->bb_xmin = content->shp_record_content_data[content->used].shp_polymorph.bb_xmin;
+    if (content->bb_xmax < content->shp_record_content_data[content->used].shp_polymorph.bb_xmax)
+        content->bb_xmax = content->shp_record_content_data[content->used].shp_polymorph.bb_xmax;
+    if (content->bb_ymin > content->shp_record_content_data[content->used].shp_polymorph.bb_ymin)
+        content->bb_ymin = content->shp_record_content_data[content->used].shp_polymorph.bb_ymin;
+    if (content->bb_ymax < content->shp_record_content_data[content->used].shp_polymorph.bb_ymax)
+        content->bb_ymax = content->shp_record_content_data[content->used].shp_polymorph.bb_ymax;
+
+    content->used ++;
+
+    return TRUE;
+}
+
+
+/*
+*  SHP_INIT_RECORD_CONTENT
+*  =======================
+*
+*  Die Funktion initialisiert die Record-Content Struktur.
+*/
+
+static void shp_init_record_content (void)
+{
+    shp_record_content_array_t *content = shp_get_record_content_array ();
+
+    assert (content != NULL);
+
+    content->shp_record_content_data = NULL;
+    content->used           = 0;
+    content->max            = 0;
+    content->bb_xmin        = MAX_INT32;
+    content->bb_ymin        = MAX_INT32;
+    content->bb_xmax        = MIN_INT32;
+    content->bb_ymax        = MIN_INT32;
+    content->content_length = 0;
+    content->content_filled = FALSE;
+}
+
+
+/*
+*  SHP_INIT_RECORD_HEADER
+*  ======================
+*
+*  Die Funktion initialisiert die Record-Header Struktur.
+*/
+
+static void shp_init_record_header (void)
+{
+    shp_record_header_array_t *header = shp_get_record_header_array ();
+
+    assert (header != NULL);
+
+    header->shp_record_header_data = NULL;
+    header->used = 0;
+    header->max  = 0;
+}
+
+
+/*
+*  SHP_FILL_POLYGON_ALL
+*  ====================
+*
+*  Die Funktion fuellt Punkte des Typs coordinates_xy in die
+*  entsprechenden Point-Shape Strukturen.
+*
+*  Parameter:
+*    - point:      Array von Punkten
+*    - num:        Anzahl der Elemente in point
+*    - shape_type: Zu befuellender Shape-Typ
+*
+*  Rueckgabe:
+*    - TRUE:  Daten erfolgreich geschrieben,
+*    - FALSE: sonst
+*/
+/* :TODO:07.06.2015 23:11:46:mmo: Kann vermutlich weg. */
+int16 shp_fill_polygon_all (coordinates_xy *point, int32 num_points,
+                            int32 num, shp_type_t shape_type)
+{
+    int32 idx;
+    shp_record_content_array_t *content;
+
+    /* Check Eingangsparameter */
+    /* ----------------------- */
+    if (point == NULL || num == 0 || shape_type == SHP_UNDEFINED)
+        return FALSE;
+
+    shp_init_record_content ();
+    content = shp_get_record_content_array ();
+
+    for (idx = 0; idx < num; idx ++)
+        if (!shp_fill_polygon (point + idx, num_points))
+            return FALSE;
+
+    content->content_filled = TRUE;
+
+    return TRUE;
+}
+
+/*
+*  SHP_FILL_POINT_ALL
+*  ==================
+*
+*  Die Funktion fuellt Punkte des Typs coordinates_xy in die
+*  entsprechenden Point-Shape Strukturen.
+*
+*  Parameter:
+*    - point:      Array von Punkten
+*    - num:        Anzahl der Elemente in point
+*    - shape_type: Zu befuellender Shape-Typ
+*
+*  Rueckgabe:
+*    - TRUE:  Daten erfolgreich geschrieben,
+*    - FALSE: sonst
+*/
+
+int16 shp_fill_point_all (coordinates_xy *point, int32 num, shp_type_t shape_type)
+{
+    int32 idx;
+    shp_record_content_array_t *content;
+
+    /* Check Eingangsparameter */
+    /* ----------------------- */
+    if (point == NULL || num == 0 || shape_type == SHP_UNDEFINED)
+        return FALSE;
+
+    shp_init_record_content ();
+    content = shp_get_record_content_array ();
+
+    for (idx = 0; idx < num; idx ++)
+        shp_fill_point (point + idx);
+
+    content->content_filled = TRUE;
+
+    return TRUE;
+}
+
+
+/*
+*  SHP_SERIALIZE_MAIN_HEADER
+*  =========================
+*
+*  Serialisiert den Main-Header in eine Datei.
+*
+*  Parameter:
+*    - fp:             File-Handler zum Schreiben
+*    - serialize_func: Serialisierungsfunktion
+*
+*  Rueckgabe:
+*    - TRUE:  Daten erfolgreich geschrieben,
+*    - FALSE: sonst
+*/
+
+int16 shp_serialize_main_header (FILE *fp, shp_serialize_func_t serialize_func)
+{
+    int32 idx;
+    uchar bytes[SHP_SIZE_BIG] = {EOS};
+    shp_main_header_t *main_header;
+
+    if (fp == NULL || serialize_func == NULL)
+        return FALSE;
+
+    main_header = shp_get_main_header ();
+
+    BIG_ENDIAN_UI32 (main_header->file_code, bytes);
+    serialize_func (bytes, SHP_SIZE_SMALL, fp);
+
+    for (idx = 0; idx < 5; idx ++)
+        {
+        BIG_ENDIAN_UI32 (main_header->unused[idx], bytes);
+        serialize_func (bytes, SHP_SIZE_SMALL, fp);
+        }
+
+    BIG_ENDIAN_UI32 (main_header->file_length, bytes);
+    serialize_func (bytes, SHP_SIZE_SMALL, fp);
+
+    LITTLE_ENDIAN_UI32 (main_header->version, bytes);
+    serialize_func (bytes, SHP_SIZE_SMALL, fp);
+
+    LITTLE_ENDIAN_UI32 (main_header->shape_type, bytes);
+    serialize_func (bytes, SHP_SIZE_SMALL, fp);
+
+    memcpy (bytes, &main_header->bb_xmin, SHP_SIZE_BIG);
+    serialize_func (bytes, SHP_SIZE_BIG, fp);
+
+    memcpy (bytes, &main_header->bb_xmax, SHP_SIZE_BIG);
+    serialize_func (bytes, SHP_SIZE_BIG, fp);
+
+    memcpy (bytes, &main_header->bb_ymin, SHP_SIZE_BIG);
+    serialize_func (bytes, SHP_SIZE_BIG, fp);
+
+    memcpy (bytes, &main_header->bb_ymax, SHP_SIZE_BIG);
+    serialize_func (bytes, SHP_SIZE_BIG, fp);
+
+    memcpy (bytes, &main_header->bb_zmin, SHP_SIZE_BIG);
+    serialize_func (bytes, SHP_SIZE_BIG, fp);
+
+    memcpy (bytes, &main_header->bb_zmax, SHP_SIZE_BIG);
+    serialize_func (bytes, SHP_SIZE_BIG, fp);
+
+    memcpy (bytes, &main_header->bb_mmin, SHP_SIZE_BIG);
+    serialize_func (bytes, SHP_SIZE_BIG, fp);
+
+    memcpy (bytes, &main_header->bb_mmax, SHP_SIZE_BIG);
+    serialize_func (bytes, SHP_SIZE_BIG, fp);
+
+    return TRUE;
+}
+
+
+/*
+*  SHP_SERIALIZE_CONTENT_POINT
+*  ===========================
+*
+*  Serialisiert Point-Shapes in eine Datei.
+*
+*  Parameter:
+*    - fp:             File-Handler zum Schreiben der Daten
+*    - serialize_func: Serialisierungsfunktion
+*
+*  Rueckgabe:
+*    - TRUE:  Daten erfolgreich geschrieben,
+*    - FALSE: sonst
+*/
+
+static int16 shp_serialize_content_point (FILE *fp, shp_serialize_func_t serialize_func)
+{
+    int32 rec;
+    uchar bytes[SHP_SIZE_BIG] = {EOS};
+    shp_record_header_array_t *header;
+    shp_record_content_array_t *content;
+
+    /* Check Eingangsparameter */
+    /* ----------------------- */
+    if (fp == NULL || serialize_func == NULL)
+        return FALSE;
+
+    header  = shp_get_record_header_array ();
+    content = shp_get_record_content_array ();
+
+    for (rec = 0; rec < header->used; rec ++)
+        {
+        BIG_ENDIAN_UI32 (header->shp_record_header_data[rec].record_number, bytes);
+        serialize_func (bytes, SHP_SIZE_SMALL, fp);
+        BIG_ENDIAN_UI32 (header->shp_record_header_data[rec].content_length, bytes);
+        serialize_func (bytes, SHP_SIZE_SMALL, fp);
+
+        LITTLE_ENDIAN_UI32 (content->shp_record_content_data[rec].shp_point.type, bytes);
+        serialize_func (bytes, SHP_SIZE_SMALL, fp);
+        memcpy (bytes, &content->shp_record_content_data[rec].shp_point.x, SHP_SIZE_BIG);
+        serialize_func (bytes, SHP_SIZE_BIG, fp);
+        memcpy (bytes, &content->shp_record_content_data[rec].shp_point.y, SHP_SIZE_BIG);
+        serialize_func (bytes, SHP_SIZE_BIG, fp);
+        }
+
+    return TRUE;
+}
+
+
+/*
+*  SHP_SERIALIZE_CONTENT_POLYGON
+*  =============================
+*
+*  Serialisiert Point-Shapes in eine Datei.
+*
+*  Parameter:
+*    - fp:             File-Handler zum Schreiben der Daten
+*    - serialize_func: Serialisierungsfunktion
+*
+*  Rueckgabe:
+*    - TRUE:  Daten erfolgreich geschrieben,
+*    - FALSE: sonst
+*/
+
+static int16 shp_serialize_content_polygon (FILE *fp, shp_serialize_func_t serialize_func)
+{
+    int32 rec;
+    uchar bytes[SHP_SIZE_BIG] = {EOS};
+    shp_record_header_array_t *header;
+    shp_record_content_array_t *content;
+
+    /* Check Eingangsparameter */
+    /* ----------------------- */
+    if (fp == NULL || serialize_func == NULL)
+        return FALSE;
+
+    header  = shp_get_record_header_array ();
+    content = shp_get_record_content_array ();
+
+    for (rec = 0; rec < header->used; rec ++)
+        {
+        int32 idx;
+
+        BIG_ENDIAN_UI32 (header->shp_record_header_data[rec].record_number, bytes);
+        serialize_func (bytes, SHP_SIZE_SMALL, fp);
+        BIG_ENDIAN_UI32 (header->shp_record_header_data[rec].content_length, bytes);
+        serialize_func (bytes, SHP_SIZE_SMALL, fp);
+
+        LITTLE_ENDIAN_UI32 (content->shp_record_content_data[rec].shp_polymorph.type, bytes);
+        serialize_func (bytes, SHP_SIZE_SMALL, fp);
+        memcpy (bytes, &content->shp_record_content_data[rec].shp_polymorph.bb_xmin, SHP_SIZE_BIG);
+        serialize_func (bytes, SHP_SIZE_BIG, fp);
+        memcpy (bytes, &content->shp_record_content_data[rec].shp_polymorph.bb_ymin, SHP_SIZE_BIG);
+        serialize_func (bytes, SHP_SIZE_BIG, fp);
+        memcpy (bytes, &content->shp_record_content_data[rec].shp_polymorph.bb_xmax, SHP_SIZE_BIG);
+        serialize_func (bytes, SHP_SIZE_BIG, fp);
+        memcpy (bytes, &content->shp_record_content_data[rec].shp_polymorph.bb_ymax, SHP_SIZE_BIG);
+        serialize_func (bytes, SHP_SIZE_BIG, fp);
+        LITTLE_ENDIAN_UI32 (content->shp_record_content_data[rec].shp_polymorph.num_parts, bytes);
+        serialize_func (bytes, SHP_SIZE_SMALL, fp);
+        LITTLE_ENDIAN_UI32 (content->shp_record_content_data[rec].shp_polymorph.num_points, bytes);
+        serialize_func (bytes, SHP_SIZE_SMALL, fp);
+
+        /* Parts rauschreiben */
+        /* ------------------ */
+        for (idx = 0; idx < content->shp_record_content_data[rec].shp_polymorph.num_parts; idx ++)
+            {
+            LITTLE_ENDIAN_UI32 (content->shp_record_content_data[rec].shp_polymorph.parts[idx], bytes);
+            serialize_func (bytes, SHP_SIZE_SMALL, fp);
+            }
+
+        /* Punkte rauschreiben */
+        /* ------------------- */
+        for (idx = 0; idx < content->shp_record_content_data[rec].shp_polymorph.num_points; idx ++)
+            {
+            memcpy (bytes, &content->shp_record_content_data[rec].shp_polymorph.point[idx].x, SHP_SIZE_BIG);
+            serialize_func (bytes, SHP_SIZE_BIG, fp);
+            memcpy (bytes, &content->shp_record_content_data[rec].shp_polymorph.point[idx].y, SHP_SIZE_BIG);
+            serialize_func (bytes, SHP_SIZE_BIG, fp);
+            }
+        }
+
+    return TRUE;
+}
+
+/*
+*  SHP_SERIALIZE_INDEX
+*  ===================
+*
+*  Serialisiert die Daten fuer das Indexfile in eine Datei.
+*
+*  Parameter:
+*    - fp:             File-Handler zum Schreiben der Daten
+*    - serialize_func: Serialisierungsfunktion
+*
+*  Rueckgabe:
+*    - TRUE:  Daten erfolgreich geschrieben,
+*    - FALSE: sonst
+*/
+
+static int16 shp_serialize_index (FILE *fp, shp_serialize_func_t serialize_func)
+{
+    int32 rec;
+    uchar bytes[SHP_SIZE_SMALL];
+    shp_record_header_array_t *header;
+
+    /* Check Eingangsparameter */
+    /* ----------------------- */
+    if (fp == NULL || serialize_func == NULL)
+        return FALSE;
+
+    header = shp_get_record_header_array ();
+
+    for (rec = 0; rec < header->used; rec ++)
+        {
+        BIG_ENDIAN_UI32 (header->shp_record_header_data[rec].offset, bytes);
+        serialize_func (bytes, SHP_SIZE_SMALL, fp);
+        BIG_ENDIAN_UI32 (header->shp_record_header_data[rec].content_length, bytes);
+        serialize_func (bytes, SHP_SIZE_SMALL, fp);
+        }
+
+    return TRUE;
+}
+
+
+/*
+*  SHP_SERIALIZE_DATA
+*  ==================
+*
+*  Die drei obligatorischen Dateien filename.{shp, shx, dbf} werden
+*  in eine Datei serialisiert.
+*
+*  Parameter:
+*    - filename:       Basisdateiname ohne Suffix
+*    - shape_type:     Zu schreibender Shape-Typ
+*    - serialize_func: Serialisierungsfunktion
+*
+*  Rueckgabe:
+*    - TRUE:  Daten erfolgreich geschrieben,
+*    - FALSE: sonst
+*/
+
+int16 shp_serialize_data (const char *filename, shp_type_t shape_type,
+                          shp_serialize_func_t serialize_func)
+{
+    FILE *fp;
+    char fullname[SHP_MAX_FILENAME_LENGTH] = {EOS};
+    int16 slen;
+    shp_main_header_t *main_header;
+    shp_record_content_array_t *content;
+
+    /*   :TODO:07.06.2015 22:58:33:mmo: Wie kann man das umgehen? */
+    /* Die Datentypen muessen zwingend die richtige Groesse haben */
+    /* ---------------------------------------------------------- */
+    assert ((sizeof (uint32) == 4) && (sizeof (double) == 8));
+
+    /* Check Eingangsparameter */
+    /* ----------------------- */
+    if (filename == NULL
+            || *filename == EOS
+            || serialize_func == NULL
+            || shape_type == SHP_UNDEFINED)
+        return FALSE;
+
+    slen = strlen (filename);
+
+    main_header = shp_get_main_header ();
+    content     = shp_get_record_content_array ();
+
+    /* Vor der Serialisierung muss erfolgreich */
+    /* ein Filler aufgerufen worden sein       */
+    /* --------------------------------------- */
+/*     if (!content->content_filled)
+ *         return FALSE;
+ */
+
+
+    shp_fill_main_header (content->content_length, shape_type, content->bb_xmin,
+                          content->bb_xmax, content->bb_ymin, content->bb_ymax,
+                          0.0, 0.0, 0.0, 0.0);
+
+    /* *.shp File schreiben */
+    /* -------------------- */
+    strcpy (fullname, filename);
+    strcat (fullname, FILE_SUFFIX_SHP);
+
+    if ((fp = fopen (fullname, WRITE_TEXT)) == NULL)
+        return FALSE;
+
+    if (!shp_serialize_main_header (fp, serialize_func))
+        return FALSE;
+
+    /* Geeignete Serialisierungsfunktion auswaehlen. Ist fuer den */
+    /* angegebenen Shapetyp keine implementiert, dann noch        */
+    /* aufraeumen und direkt zurueck.                             */
+    /* ---------------------------------------------------------- */
+    if (shape_type == SHP_POINT)
+        {
+        if (!shp_serialize_content_point (fp, serialize_func))
+            return FALSE;
+        }
+    else if (shape_type == SHP_POLYGON)
+        {
+        if (!shp_serialize_content_polygon (fp, serialize_func))
+            return FALSE;
+        }
+    else
+        {
+        fclose (fp);
+        return FALSE;
+        }
+
+    fclose (fp);
+
+    /* *.shx File schreiben */
+    /* -------------------- */
+    strcpy (fullname + slen, FILE_SUFFIX_SHX);
+
+    if ((fp = fopen (fullname, WRITE_TEXT)) == NULL)
+        return FALSE;
+
+    /* Neue file_length in den Main-Header eintragen */
+    /* --------------------------------------------- */
+    main_header->file_length = SHP_MAIN_HEADER_LENGTH +
+                               SHP_RECORD_HEADER_LENGTH * content->used;
+
+    if (!shp_serialize_main_header (fp, serialize_func)
+            || !shp_serialize_index (fp, serialize_func))
+        return FALSE;
+
+    fclose (fp);
+
+    /* *.dbf File schreiben */
+    /* -------------------- */
+    strcpy (fullname + slen, FILE_SUFFIX_DBF);
+
+    if ((fp = fopen (fullname, WRITE_TEXT)) == NULL)
+        return FALSE;
+
+    fclose (fp);
+
+    return TRUE;
+}
+
+/* --- */
+/* EOF */

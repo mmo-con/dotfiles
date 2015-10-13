@@ -1,0 +1,30 @@
+#ifndef MSTRING_HPP
+#define MSTRING_HPP
+
+#include <iostream>
+#include <cstdlib>
+
+namespace mmo
+{
+    class String
+        {
+        public:
+            String (void): str{new char[1] {'\0'}}, used{0}, max{0} {}
+            String (const char *);
+            String (const String&);
+            ~String (void) {delete [] str;}
+
+            std::size_t len (void) const {return used;}
+//            std::size_t cap (void) const {return max;}
+
+            String& operator=(const String&) const;
+            friend std::ostream& operator<<(std::ostream&, const String&);
+        private:
+            char *str;
+            std::size_t used;
+            std::size_t max;
+        };
+}
+
+
+#endif

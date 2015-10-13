@@ -1,0 +1,33 @@
+#include "globs.hpp"
+#include "board.hpp"
+
+
+namespace mmo
+{
+    Board::Board ()
+        {
+        short sq = 0;
+
+        for (short row = ROW_1; row < ROW_8; row ++)
+            {
+            for (col = COL_A; col < COL_H; col ++)
+                {
+                short square = 21 + row + col;
+                squares_64[sq] = square;
+                squares_120[square] = square;
+                sq ++;
+                }
+            }
+        side = BOTH;
+        draw_50 = 0;
+        en_passant = OFF_BOARD;
+
+        for (size_t i = 0; i < 4; i ++)
+            castle_perms.set (i);
+        }
+
+    inline short sq_64_to_120 (short sq)
+        {
+
+        }
+}
