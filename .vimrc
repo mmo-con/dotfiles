@@ -393,19 +393,19 @@ function! ProcessCtagsDatabase()
     endif
     "Generate stdlib database only once
     if empty(glob(".vimfiles/stdclib"))
-        silent! !ctags -R --sort=yes --c++-kinds=+p --fields=+iaS --extra=+q
+        silent! !ctags -R --sort=yes --c++-kinds=+p --fields=+iaS --extra=+qf
                  \ --language-force=C++ --tag-relative=yes -f .vimfiles/stdclib
                  \ /usr/include/c++/
     endif
     "Generate Tag-file for local project files
-    silent! !ctags -h="+." --language-force="c++" --sort=yes --c++-kinds=+p --fields=+iaS
-                  \ --extra=+q --tag-relative=yes -f .vimfiles/localclib *
+    silent! !ctags -a -h="+." --language-force="c++" --sort=yes --c++-kinds=+p --fields=+iaS
+                  \ --extra=+qf --tag-relative=yes -f .vimfiles/localclib *
     echo "Processed ctags database."
 endfunction
 
 "Toggle between absolute/relative line numbers
 "---------------------------------------------
-function! NumberToggle()
+function! ToggleNumber()
   if(&relativenumber)
     set norelativenumber
     set number
@@ -414,6 +414,22 @@ function! NumberToggle()
     set number
   endif
 endfunc
+
+"Toggle vertical bar for cursorposition
+"--------------------------------------
+let g:cursorcolumn=0
+
+function! ToggleCursorColumn()
+	if(g:cursorcolumn)
+		set nocursorcolumn
+		set completeopt=menuone,preview
+		let g:cursorcolumn=0
+	else
+		set cursorcolumn
+		set completeopt=menuone
+		let g:cursorcolumn=1
+	endif
+endfunction
 
 "============================[ PLUGIN CONFIGURATIONS ]===============================
 
@@ -601,7 +617,9 @@ nnoremap <Leader>wt :ToggleWhitespace<CR>
 nnoremap <Leader>wr :StripWhitespace<CR>
 
 "Toggle between absolute/relative line numbers
-nnoremap <C-l> :call NumberToggle()<CR>
+nnoremap <C-l> :call ToggleNumber()<CR>
+"Toggle cursor column
+nnoremap <C-k> :call ToggleCursorColumn()<CR>
 
 "Call 'make' without locking vim
 nnoremap <F10> :AsyncMake<CR>
