@@ -406,13 +406,13 @@ endfunction
 "Toggle between absolute/relative line numbers
 "---------------------------------------------
 function! ToggleNumber()
-  if(&relativenumber)
-    set norelativenumber
-    set number
-  else
-    set relativenumber
-    set number
-  endif
+    if(&relativenumber)
+        set norelativenumber
+        set number
+    else
+        set relativenumber
+        set number
+    endif
 endfunc
 
 "Toggle vertical bar for cursorposition
@@ -420,15 +420,15 @@ endfunc
 let g:cursorcolumn=0
 
 function! ToggleCursorColumn()
-	if(g:cursorcolumn)
-		set nocursorcolumn
-		set completeopt=menuone,preview
-		let g:cursorcolumn=0
-	else
-		set cursorcolumn
-		set completeopt=menuone
-		let g:cursorcolumn=1
-	endif
+    if(g:cursorcolumn)
+        set nocursorcolumn
+        set completeopt=menuone,preview
+        let g:cursorcolumn=0
+    else
+        set cursorcolumn
+        set completeopt=menuone
+        let g:cursorcolumn=1
+    endif
 endfunction
 
 "============================[ PLUGIN CONFIGURATIONS ]===============================
@@ -456,6 +456,9 @@ nnoremap <Leader>pp :exe "Cprint " . expand("<cword>") <CR>
 
 "rainbow brackets config
 "let g:rainbow_active = 1
+
+"Use tk-gui for debugging (Devel::ptkdb)
+let g:Perl_Debugger = "ptkdb"
 
 "Ctrlp config
 let g:ctrlp_map = '<c-p>'
