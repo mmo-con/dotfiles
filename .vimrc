@@ -127,7 +127,7 @@ if(has("gui_running"))
     "set guifont=Inconsolata\ 12
     "set guifont=Meslo\ LG\ S\ 10
     set background=dark     "Adapt colours for background
-    colorscheme gruvbox
+    colorscheme molokai
     set lines=999 columns=999
 else
     set t_Co=256            "Configure for 256 colours terminal
@@ -192,6 +192,11 @@ set cinoptions+=)20 "Unclosed parens up to 20 lines away
 set cinoptions+=*30 "Unclosed comments up to 30 lines away
 
 "===================================[ MAPPINGS ]=====================================
+
+iab mfg Mit freundlichen Grüßen
+        \<CR>Markus Moll
+iab mbg Viele Grüße
+        \<CR>Markus
 
 "Insert current time/date
 nnoremap <Leader>D :r!date<cr>
@@ -466,7 +471,7 @@ let g:ctrlp_cmd = 'CtrlP'
 
 "Vim-airline config
 if(has("gui_running"))
-    let g:airline_theme='gruvbox'
+    let g:airline_theme='molokai'
 else
     let g:airline_theme='badwolf'
 endif
@@ -521,6 +526,22 @@ set completeopt=menuone,menu,longest,preview
 "AutoComplPop config
 let g:acp_enableAtStartup    = 1
 let g:acp_completeoptPreview = 1
+
+"Jedi-Config
+let g:jedi#auto_initialization = 1
+let g:jedi#auto_vim_configuration = 1
+let g:jedi#use_splits_not_buffers = "left"
+let g:jedi#popup_select_first = 0
+let g:jedi#popup_on_dot = 0
+let g:jedi#show_call_signatures = "1"
+let g:jedi#goto_command = "<leader>jd"
+let g:jedi#goto_assignments_command = "<leader>jg"
+let g:jedi#goto_definitions_command = ""
+let g:jedi#documentation_command = "K"
+let g:jedi#usages_command = "<leader>jn"
+let g:jedi#completions_command = "<C-n>"
+let g:jedi#rename_command = "<leader>r"
+
 
 "Use 'ctrl-space' to complete
 inoremap <C-space> <C-x><C-o>
