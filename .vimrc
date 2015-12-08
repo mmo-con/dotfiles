@@ -197,6 +197,8 @@ iab mfg Mit freundlichen Grüßen
         \<CR>Markus Moll
 iab mbg Viele Grüße
         \<CR>Markus
+iab mlg Liebe Grüße
+        \<CR>Markus
 
 "Insert current time/date
 nnoremap <Leader>D :r!date<cr>
