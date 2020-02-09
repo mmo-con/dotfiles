@@ -1,8 +1,15 @@
 #!/bin/bash
 
 VERBOSE=0
-GIT_CLONE="git clone --quiet"
+GIT_CLONE_CMD="git clone --quiet"
+PKG_INSTALL_CMD="pacman --noconfirm --noprogressbar -S"
 LOG_DIR="${HOME}/.install_log"
+
+INSTALL_AUR=(
+    "vivaldi"
+    "vivaldi-ffmpeg-codecs"
+    "vivaldi-widevine" # evtl ...
+)
 
 INSTALL_PACMAN=(
     "cscope"
@@ -48,7 +55,7 @@ done
 echo "Installing packages via pacman ..."
 
 for i in "${INSTALL_PACMAN[@]}"; do
-    sudo pacman --noconfirm --noprogressbar -S ${i}&> ${LOG_DIR}/install.log
+    sudo ${PKG_INSTALL_CMD} ${i}&> ${LOG_DIR}/install.log
     if [ $? != 0 ]; then
         echo -e "installing \e[93m'${i}'\e[0m ==> \e[91mFailed.\e[0m"
     else
@@ -68,7 +75,7 @@ OMZ_ASG_URL="https://github.com/zsh-users/zsh-autosuggestions.git"
 OMZ_ASG_DIR="${OMZ_DIR}/custom/plugins/zsh-autosuggestions"
 
 if [ "$VERBOSE" -ne 0 ]; then
-    GIT_CLONE="git clone"
+    GIT_CLONE_CMD="git clone"
 fi
 if [ ! -d "${LOG_DIR}" ]; then
     mkdir --mode=0700 ${LOG_DIR}
@@ -88,7 +95,7 @@ if [ $ok -eq 1 ]; then
         fi
     fi
 
-    ${GIT_CLONE} "${OMZ_URL}" "${OMZ_DIR}"
+    ${GIT_CLONE_CMD} "${OMZ_URL}" "${OMZ_DIR}"
     if [ $? != 0 ]; then
         echo "==> Cannot clone from '${OMZ_URL}'. Skipping zsh-related items ..."
         ok=0
@@ -100,7 +107,7 @@ fi
 
 if [ $ok -eq 1 ]; then
     echo "==> Installing zsh-autosuggestions to ${OMZ_ASG_DIR} ..."
-    ${GIT_CLONE} "${OMZ_ASG_URL}" "${OMZ_ASG_DIR}"
+    ${GIT_CLONE_CMD} "${OMZ_ASG_URL}" "${OMZ_ASG_DIR}"
     if [ $? != 0 ]; then
         echo "==> Cannot clone from '${OMZ_ASG_URL}'. Skipping zsh-autosuggestions ..."
     else
