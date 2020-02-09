@@ -100,9 +100,15 @@ source $ZSH/oh-my-zsh.sh
 
 alias cp="cp -i"                          # confirm before overwriting something
 alias df='df -h'                          # human-readable sizes
+
 alias ls='ls --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
 alias ll='ls -l --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
 alias la='ls -la --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
+
+alias ka='lsd --group-dirs=first --icon=never -l -A -F'
+alias kl='lsd --group-dirs=first --icon=never -l -F'
+alias ks='lsd --group-dirs=first --icon=never -l -S -F'
+alias kt='lsd --group-dirs=first --icon=never -l -tr -F'
 
 export HOST_OS=linux
 export TARGET_OS=Linux
