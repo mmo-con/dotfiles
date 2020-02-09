@@ -1,0 +1,30 @@
+[user]
+	name = Markus Moll
+	email = markus.moll@hacon.de
+[core]
+	editor = vim
+	excludesfile = /home/mmo/.gitignore
+[diff]
+    tool = meld
+[difftool]
+    prompt = false
+[difftool "meld"]
+    cmd = meld "$LOCAL" "$REMOTE"
+[merge]
+	tool = meld
+	prompt = false
+[mergetool "meld"]
+    cmd = meld "$LOCAL" "$MERGED" "$REMOTE" --output "$MERGED"
+[alias]
+	co = checkout
+	br = branch
+	ci = commit
+	st = status --short
+	df = difftool -d
+    lg = log --pretty=oneline
+	unstage = reset HEAD --
+[color]
+	branch = auto
+	diff = auto
+	interactive = auto
+	status = auto
