@@ -15,6 +15,7 @@ INSTALL_PACMAN=(
     "gvim"
     "htop"
     "lsd"
+    "meld"
     "terminator"
     "the_silver_searcher"
     "zsh"
