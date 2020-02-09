@@ -16,28 +16,32 @@ INSTALL_PACMAN=(
     "htop"
     "terminator"
     "the_silver_searcher"
+    "zsh"
     "quitzofratzl"
 )
 
 INSTALL_GIT=(
-    "zsh"
     "sshmnt"
+)
+
+SYMBOLIC_LINKS=(
+    "/downloads:/media/data/downloads"
+    "/dropbox:/media/data/Dropbox"
 )
 
 echo "Creating symbolic links ..."
 
-sudo ln -s /media/data/Dropbox /dropbox
-if [ $? != 0 ]; then
-    echo -e "creating \e[93m'/media/data/Dropbox --> /dropbox'\e[0m ==> \e[91mFailed.\e[0m"
-else
-    echo -e "creating \e[93m'/media/data/Dropbox --> /dropbox'\e[0m ==> \e[92mSuccess.\e[0m"
-fi
-sudo ln -s /media/data/downloads /downloads
-if [ $? != 0 ]; then
-    echo -e "creating \e[93m'/media/data/downloads --> /downloads'\e[0m ==> \e[91mFailed.\e[0m"
-else
-    echo -e "creating \e[93m'/media/data/downloads --> /downloads'\e[0m ==> \e[92mSuccess.\e[0m"
-fi
+for i in "${SYMBOLIC_LINKS[@]}"; do
+    KEY="${i%%:*}"
+    VALUE="${i##*:}"
+
+    sudo ln --symbolic --no-dereference ${VALUE} ${KEY}
+    if [ $? != 0 ]; then
+        echo -e "creating \e[93m' ${VALUE} --> ${KEY}'\e[0m ==> \e[91mFailed.\e[0m"
+    else
+        echo -e "creating \e[93m'${VALUE} --> ${KEY}'\e[0m ==> \e[92mSuccess.\e[0m"
+    fi
+done
 
 echo "Installing packages via pacman ..."
 
@@ -50,11 +54,7 @@ for i in "${INSTALL_PACMAN[@]}"; do
     fi
 done
 
-exit 0
-
-for i in "${INSTALL_GIT[@]}"; do
-    echo "Installing ${i} ...";
-done
+echo "Installing packages from github ..."
 
 SSHMNT_DIR="${HOME}/.sshmnt"
 SSHMNT_URL="https://github.com/prurigro/sshmnt"
@@ -76,16 +76,8 @@ if [ ! -d "${LOG_DIR}" ]; then
 fi
 
 ok=1
-echo "==> Installing 'zsh' ..."
-sudo pacman --noconfirm --noprogressbar -S zsh &> ${LOG_DIR}/install.log
-if [ $? != 0 ]; then
-    echo "Failed."
-    ok=0
-fi
-echo "==> Success."
-
 if [ $ok -eq 1 ]; then
-    echo "==> Installing oh-my-zsh to ${OMZ_DIR} ..."
+    echo "installing oh-my-zsh to ${OMZ_DIR} ..."
     if [ ! -d "${ZSH_DIR}" ]; then
         mkdir --mode=0700 "${ZSH_DIR}"
         if [ $? != 0 ]; then
