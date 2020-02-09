@@ -96,14 +96,14 @@ alias free='free -m'                      # show sizes in MB
 alias np='nano -w PKGBUILD'
 alias more=less
 
-alias ls='ls --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
-alias ll='ls -l --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
-alias la='ls -la --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
+alias ks='ls --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
+alias kl='ls -l --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
+alias ka='ls -la --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
 
-alias ka='lsd --group-dirs=first --icon=never -l -A -F'
-alias kl='lsd --group-dirs=first --icon=never -l -F'
-alias ks='lsd --group-dirs=first --icon=never -l -S -F'
-alias kt='lsd --group-dirs=first --icon=never -l -tr -F'
+alias la='lsd --group-dirs=first --icon=never -l -A -F'
+alias ll='lsd --group-dirs=first --icon=never -l -F'
+alias lt='lsd --group-dirs=first --icon=never -l -tr -F'
+alias lu='lsd --group-dirs=first --icon=never -l -S -F'
 
 PATH=$PATH:/media/data/Dropbox/skripte
 export PATH
