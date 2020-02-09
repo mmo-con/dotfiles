@@ -1,9 +1,0 @@
-#!/bin/bash
-
-PROG=`pwd`"/"$1
-
-TIME_STAMP="--time-stamp=yes"
-LOG_FILE="--log-file=valgrind.%q{$1}"
-MEMCHECK="--tool=memcheck --leak-check=full --track-origins=yes"
-
-valgrind $TIME_STAMP $LOG_FILE $MEMCHECK $PROG

@@ -1,8 +1,0 @@
-#ifndef CHESS_HPP
-#define CHESS_HPP
-
-typedef unsigned long long board_t;
-
-class board_t
-
-#endif

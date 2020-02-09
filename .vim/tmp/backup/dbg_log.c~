@@ -1,9 +1,0 @@
-#include <stdio.h>
-#include "dbg_log.h"
-
-
-void dlog (const char *file, const char *func, int line, const char *msg)
-{
-    fprintf (stderr, "In [%s, %s] at line %d:\n", file, func, line);
-    fprintf (stderr, "\t%s\n", msg);
-}
