@@ -65,14 +65,16 @@ done
 
 echo "Installing packages from github ..."
 
-SSHMNT_DIR="${HOME}/.sshmnt"
 SSHMNT_URL="https://github.com/prurigro/sshmnt"
+SSHMNT_DIR="${HOME}/.sshmnt"
 
 ZSH_DIR="${HOME}/.zsh"
 OMZ_URL="https://github.com/robbyrussell/oh-my-zsh.git"
 OMZ_DIR="${ZSH_DIR}/oh-my-zsh"
 OMZ_ASG_URL="https://github.com/zsh-users/zsh-autosuggestions.git"
 OMZ_ASG_DIR="${OMZ_DIR}/custom/plugins/zsh-autosuggestions"
+OMZ_PL10K_URL="https://github.com/romkatv/powerlevel10k.git"
+OMZ_PL10K_DIR="${OMZ_DIR}/custom/themes"
 
 if [ "$VERBOSE" -ne 0 ]; then
     GIT_CLONE_CMD="git clone"
@@ -83,6 +85,8 @@ if [ ! -d "${LOG_DIR}" ]; then
         echo "==> Cannot create log dir '${LOG_DIR}'. Exiting ..."
     fi
 fi
+
+echo "installing custom zsh plugins ..."
 
 ok=1
 if [ $ok -eq 1 ]; then
@@ -110,6 +114,16 @@ if [ $ok -eq 1 ]; then
     ${GIT_CLONE_CMD} "${OMZ_ASG_URL}" "${OMZ_ASG_DIR}"
     if [ $? != 0 ]; then
         echo "==> Cannot clone from '${OMZ_ASG_URL}'. Skipping zsh-autosuggestions ..."
+    else
+        echo "==> Success."
+    fi
+fi
+
+if [ $ok -eq 1 ]; then
+    echo "==> Installing powerlevel10k theme to ${OMZ_PL10K_DIR} ..."
+    ${GIT_CLONE_CMD} --depth=1 "${OMZ_PL10K_URL}" "${OMZ_PL10K_DIR}"
+    if [ $? != 0 ]; then
+        echo "==> Cannot clone from '${OMZ_PL10K_URL}'. Skipping powerlevel10k theme ..."
     else
         echo "==> Success."
     fi
