@@ -1,0 +1,15 @@
+noremap ö l
+noremap l k
+noremap k j
+noremap j h
+
+noremap H ^
+noremap L $
+vnoremap L g_
+
+vnoremap < <gvh
+vnoremap > >gvh
+
+imap jk <Esc>
+
+nnoremap S i<cr><esc>^mwgk:silent! s/\v +$//<cr>:noh<cr>`w
