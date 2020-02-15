@@ -120,6 +120,8 @@ alias ll='lsd --group-dirs=first --icon=never -l -F'
 alias lt='lsd --group-dirs=first --icon=never -l -tr -F'
 alias lu='lsd --group-dirs=first --icon=never -l -S -F'
 
+alias uyd='sudo curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /dropbox/skripte/ytd'
+
 export HOST_OS=linux
 export TARGET_OS=Linux
 export TARGET_GUI=Console
