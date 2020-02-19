@@ -159,7 +159,7 @@ if(has("gui_running"))
 else
     set t_Co=256
     set background=dark
-    colorscheme gruvbox
+    colorscheme onedark
     set termguicolors
 endif
 
@@ -804,8 +804,12 @@ nmap <leader>0 <Plug>BufTabLine.Go(10)
 "=================================[ PYTHON-MODE ]=====================================
 
 nnoremap <F12> :!python %<cr>
+
+"=====================================[ ALE ]=========================================
+
 let g:ale_set_loclist=0
 let g:ale_set_quickfix=1
+let g:ale_linters = {'c': []}
 
 "===================================[ FZF ]==========================================
 
