@@ -2,6 +2,8 @@
 # ~/.bashrc
 #
 
+umask 000
+
 [[ $- != *i* ]] && return
 
 colors() {
