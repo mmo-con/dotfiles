@@ -118,7 +118,7 @@ set synmaxcol=350            " No syntax highlighting for more than 350 cols
 set colorcolumn=+1           " Show vertical bar at textwidth
 set cursorline               " Highlight current line
 "set spell                    " Use spell correction
-"set spelllang=en_gb          " Define language for spell
+"set spelllang=de             " Define language for spell
 
 " Remove comment leader when joining comment lines
 if v:version > 703 || v:version == 703 && has('patch541')
@@ -144,22 +144,24 @@ if(has("gui_running"))
     set guioptions+=m
     set guioptions+=r
     set guioptions-=L
+    set guifont=Hack\ Regular\ 11
+    "set guifont=Inconsolata\ Condensed\ Medium\ 14
     "set guifont=Inconsolata\ 13
     "set guifont=Liberation\ Mono\ Regular\ 11
     "set guifont=Fira\ Code\ Retina\ 11
     "set guifont=CamingoCode\ Regular\ 11
     "set guifont=Input\ Mono\ Regular\ 11
     "set guifont=Fantasque\ Sans\ Mono\ 13
-    set guifont=Droid\ Sans\ Mono\ Regular\ 11
+    "set guifont=Droid\ Sans\ Mono\ Regular\ 11
     "set guifont=Monaco\ Regular\ 11
     "set guifont=Source\ Code\ Pro\ Medium\ 11
-    colorscheme onedark
+    colorscheme gruvbox
     set background=dark
     set lines=999 columns=999
 else
     set t_Co=256
     set background=dark
-    colorscheme onedark
+    colorscheme gruvbox
     set termguicolors
 endif
 
@@ -175,18 +177,6 @@ set noundofile
 "if !isdirectory(expand(&undodir))
     "call mkdir(expand(&undodir), "p")
 "endif
-
-" tagfile folders
-let g:TagFilesBasePath       = "/media/data/.vimfiles/"  " Everything goes here!
-let g:TagFilesCtagsFileStd   = "stdclib"                 " Tags for /usr/include
-let g:TagFilesCtagsFileLocal = "localclib"               " Tags for local project
-let g:TagFilesCscopeFileXref = "cscope.out"              " Cscope Xref Db
-let g:TagFilesCtagsPathStd   = g:TagFilesBasePath . g:TagFilesCtagsFileStd
-let g:TagFilesCtagsPathLocal = g:TagFilesBasePath . g:TagFilesCtagsFileLocal
-let g:TagFilesCscopePathXref = g:TagFilesBasePath . g:TagFilesCscopeFileXref
-
-exec 'set tags+=' . g:TagFilesCtagsPathStd
-exec 'set tags+=' . g:TagFilesCtagsPathLocal
 
 "===================================[ CODE STYLE ]===================================
 
@@ -374,34 +364,6 @@ inoremap <C-space> <C-x><C-o>
 
 "============================[ FUNCTIONS / MINI-PLUGINS ]============================
 
-" Dimming inactive splits using the colorcolumn feature
-"function! s:DimInactiveWindows()
-  "for i in range(1, tabpagewinnr(tabpagenr(), '$'))
-    "let l:range = ""
-    "if i != winnr()
-      "if &wrap
-        "" HACK: when wrapping lines is enabled, we use the maximum number
-        "" of columns getting highlighted. This might get calculated by
-        "" looking for the longest visible line and using a multiple of
-        "" winwidth().
-        "let l:width=256 " max
-      "else
-        "let l:width=winwidth(i)
-      "endif
-      "let l:range = join(range(1, l:width), ',')
-    "endif
-    "call setwinvar(i, '&colorcolumn', l:range)
-  "endfor
-"endfunction
-"
-"augroup DimInactiveWindows
-  "au!
-  "au WinEnter * call s:DimInactiveWindows()
-  "au WinEnter * set cursorline
-  "au WinLeave * set nocursorline
-"augroup END
-
-
 " Highlight Word
 " --------------
 " This mini-plugin provides a few mappings for highlighting words temporarily.
@@ -440,76 +402,6 @@ hi def InterestingWord4 guifg=#000000 ctermfg=16 guibg=#b88853 ctermbg=137
 hi def InterestingWord5 guifg=#000000 ctermfg=16 guibg=#ff9eb8 ctermbg=211
 hi def InterestingWord6 guifg=#000000 ctermfg=16 guibg=#ff2c4b ctermbg=195
 
-" Functions for the generation of cscope databases
-" ------------------------------------------------
-function! CollectCscopeFileNames()
-    " Collect all the files you want the tags to be generated for
-    " and write them to the vimfiles directory. Files with weird
-    " suffixes or without any suffix at all must be stated seperately.
-    " There are two reasons for this detour: 1. we dont want to generate
-    " tags for scripts and config files that are maybe located in the
-    " project folder and 2. we dont want vim.grep to search the tagfiles
-    " that are otherwise stored in the project folder.
-    exec "silent! !find %:p:h -maxdepth 1 -name '*.c' -o -name '*.h'" .
-                  \" -o -name '*.cpp' -o -name '*.hpp' -o -name 'structh'" .
-                  \" -o -name 'ainclude' -o -name 'ariglobs' -o -name 'mkglobs'" .
-                  \" -o -name 'mixglob' -o -name 'prototyp' -o -name 'vardimh'" .
-                  \" -o -name 'mk_txt'" .
-                  \" > " . g:TagFilesBasePath . "cscope.files"
-endfunction
-
-function! ProcessCscopeDatabase()
-    " The function firstly generates 'cscope.files' and then generates
-    " the cscope database
-    if !isdirectory(g:TagFilesBasePath)
-        call mkdir(g:TagFilesBasePath)
-    endif
-    silent! call CollectCscopeFileNames()
-    " The following is a workaround. The cscope database is created
-    " incorrectly when cscope is called from the project folder. Changing into
-    " the tag-subdirectory solves the problem - not clear why.
-    let l:cwd=expand("%:p:h")
-    exec "cd " . g:TagFilesBasePath
-    exec "silent! !cscope -i " . g:TagFilesBasePath . "cscope.files -cbqk -f " .
-            \ g:TagFilesBasePath . g:TagFilesCscopeFileXref
-    silent! :cs reset
-    exec "cd " . l:cwd
-    exec "silent! :cs add " . g:TagFilesBasePath . g:TagFilesCscopeFileXref
-    echo "Processed cscope database."
-endfunction
-
-function! LoadCallTree()
-    exec "CCTreeLoadXRefDBFromDisk " . g:TagFilesBasePath . "cctree.out"
-endfunction
-
-function! ProcessCallTree()
-    " The function generates the database for the use of calltrees
-    if !isdirectory(g:TagFilesBasePath)
-        call mkdir(g:TagFilesBasePath)
-    endif
-    " Load Cscope Database and save it in native crossref format
-    exec "silent! CCTreeLoadDB " . g:TagFilesCscopePathXref
-    exec "silent! CCTreeSaveXRefDB " . g:TagFilesBasePath . "cctree.out"
-endfunction
-
-
-" Generation of ctags databases
-" -----------------------------
-function! ProcessCtagsDatabase()
-    if !isdirectory(g:TagFilesBasePath)
-        call mkdir(g:TagFilesBasePath)
-    endif
-    " Generate stdlib database only once
-    if empty(glob(g:TagFilesCtagsPathStd))
-        exec "silent! !ctags -R -f " . g:TagFilesCtagsPathStd . " --sort=yes --c++-kinds=+p --fields=+iaS"
-                 \ "--extra=+qf --language-force=C++ --tag-relative=yes /usr/include/c++"
-    endif
-    " Generate Tag-file for local project files
-        exec "silent! !ctags -f " . g:TagFilesCtagsPathLocal . " -h=\"+.\" --language-force=C++ --sort=yes"
-                        \ "--c++-kinds=+p --fields=+iaS --extra=+qf --tag-relative=yes *"
-    echo "Processed ctags database."
-endfunction
-
 " Toggle between absolute/relative line numbers
 " ---------------------------------------------
 function! ToggleNumber()
@@ -527,11 +419,11 @@ let g:cursorcolumn=0
 function! ToggleCursorColumn()
     if(g:cursorcolumn)
         set nocursorcolumn
-        set completeopt=menuone,preview
+        "set completeopt=menuone,preview
         let g:cursorcolumn=0
     else
         set cursorcolumn
-        set completeopt=menuone
+        "set completeopt=menuone
         let g:cursorcolumn=1
     endif
 endfunction
@@ -563,44 +455,53 @@ endfunction
 
 "====================================[ AGREP ]=======================================
 
-nnoremap <silent><leader>g :Agrep <cword> *<cr>
-nnoremap <silent><leader>T :Agrep 'TODO \[mmo' *<cr>
+nnoremap <silent><leader>g :Agrep -r <cword> *<cr>
+nnoremap <silent><leader>T :Agrep -r 'TODO \[mmo' *<cr>
 nnoremap <F6> :<C-U>exe v:count1.(bufwinnr('Agrep') == -1 ? 'cn' : 'Anext')<CR>
 nnoremap <Leader><F6> :<C-U>exe v:count1.(bufwinnr('Agrep') == -1 ? 'cp' : 'Aprev')<CR>
 nnoremap <Leader>a :Aclose<CR> :bdelete Agrep<CR>
 
 let g:agrep_default_flags = '-I -s --exclude=CHANGELOG'
 
-"====================================[ GIT ]=========================================
-
-nnoremap <Leader>ggs :Gstatus<CR>
-nnoremap <Leader>ggt :Gitv!<CR>
-nnoremap <Leader>ggl :Gitv --all<CR>
-
 "==================================[ NEOMAKE ]=======================================
 
-let g:neomake_hafas_release_maker = {
+let g:efmt =
+      \ '%-G%f:%s:,' .
+      \ '%-G%f:%l: %#error: %#(Each undeclared identifier is reported only%.%#,' .
+      \ '%-G%f:%l: %#error: %#for each function it appears%.%#,' .
+      \ '%-GIn file included%.%#,' .
+      \ '%-G %#from %f:%l\,,' .
+      \ '%f:%l:%c: %trror: %m,' .
+      \ '%f:%l:%c: %tarning: %m,' .
+      \ '%I%f:%l:%c: note: %m,' .
+      \ '%f:%l:%c: %m,' .
+      \ '%f:%l: %trror: %m,' .
+      \ '%f:%l: %tarning: %m,'.
+      \ '%I%f:%l: note: %m,'.
+      \ '%f:%l: %m'
+
+let g:neomake_32bit_release_maker = {
     \ 'exe': 'make',
-    \ 'args': ['-j4'],
-    \ 'errorformat': '%f:%l:%c: %m'
+    \ 'args': ['linux', 'cpu=4', 'cfl=-DCMAKE_EXPORT_COMPILE_COMMANDS=ON'],
+    \ 'errorformat': g:efmt
     \ }
 
-let g:neomake_hafas_debug_maker = {
+let g:neomake_32bit_debug_maker = {
     \ 'exe': 'make',
-    \ 'args': ['-j4', 'debug=1'],
-    \ 'errorformat': '%f:%l:%c: %m'
+    \ 'args': ['linuxd', 'cpu=4', 'cfl=-DCMAKE_EXPORT_COMPILE_COMMANDS=ON'],
+    \ 'errorformat': g:efmt
     \ }
 
-let g:neomake_transform_release_maker = {
+let g:neomake_64bit_release_maker = {
     \ 'exe': 'make',
-    \ 'args': [],
-    \ 'errorformat': '%f:%l:%c: %m'
+    \ 'args': ['linux64', 'cpu=4', 'cfl=-DCMAKE_EXPORT_COMPILE_COMMANDS=ON'],
+    \ 'errorformat': g:efmt
     \ }
 
-let g:neomake_transform_debug_maker = {
+let g:neomake_64bit_debug_maker = {
     \ 'exe': 'make',
-    \ 'args': ['debug=1'],
-    \ 'errorformat': '%f:%l:%c: %m'
+    \ 'args': ['linux64d', 'cpu=4', 'cfl=-DCMAKE_EXPORT_COMPILE_COMMANDS=ON'],
+    \ 'errorformat': g:efmt
     \ }
 
 function! SetWarningType(entry)
@@ -626,10 +527,10 @@ let g:neomake_warning_sign = {'text': '!!', 'texthl': 'NeomakeWarningSign'}
 let g:neomake_remove_invalid_entries = 1
 let g:neomake_open_list = 2
 
-nnoremap <Leader>mhr :Neomake! hafas_release<CR>
-nnoremap <Leader>mhd :Neomake! hafas_debug<CR>
-nnoremap <Leader>mtr :Neomake! transform_release<CR>
-nnoremap <Leader>mtd :Neomake! transform_debug<CR>
+nnoremap <Leader>r32 :Neomake! 32bit_release<CR>
+nnoremap <Leader>d32 :Neomake! 32bit_debug<CR>
+nnoremap <Leader>r64 :Neomake! 64bit_release<CR>
+nnoremap <Leader>d64 :Neomake! 64bit_debug<CR>
 nnoremap <Leader>mcp :Neomake! cppcheck<CR>
 
 function! NeomakeFinishMsg()
@@ -642,20 +543,6 @@ augroup my_neomake_hooks
     au!
     autocmd User NeomakeJobFinished nested call NeomakeFinishMsg()
 augroup END
-
-"=================================[ COMMAND-T ]======================================
-
-"let g:CommandTMaxDepth = 3
-"let g:CommandTFileScanner = "find"
-"let g:CommandTWildIgnore = '*/linux/*,*/linux64/*,*/RCS/*'
-"let g:CommandTScanDotDirectories = 0
-"let g:CommandTInputDebounce = 50
-"let g:CommandTMaxCachedDirectories = 10
-
-"nnoremap <C-g> :CommandT<CR>
-"nnoremap <C-h> :CommandTTag<CR>
-"nnoremap <Leader>ch :CommandTHistory<CR>
-"nnoremap <Leader>cl :CommandTLine<CR>
 
 "==================================[ NERDTREE ]======================================
 
@@ -671,56 +558,9 @@ let NERDTreeDirArrowCollapsible = '-'
 nnoremap <Leader><F8> :NERDTreeToggle<CR>:wincmd =<CR>
 nnoremap <Leader>cp :NERDTreeClose<CR>:bufdo bd<CR>:NERDTree<CR>
 
-"==================================[ TAGLIST ]=======================================
+"==================================[ TAGBAR ]========================================
 
-let Tlist_Use_Right_Window = 1
-let Tlist_Show_One_File = 1
-let Tlist_Sort_Type = "name"
-
-nnoremap <silent> <F8> :TlistToggle<CR>:wincmd =<CR>
-
-"====================================[ CVIM ]========================================
-
-let g:C_LineEndCommColDefault = 35
-let g:C_LoadMenus             = 'no'
-
-"===================================[ CSCOPE ]=======================================
-
-if has("cscope")
-    set cst      " Search cscope and tag files
-    set csto=0   " Search first cscope then tag files
-    set nocsverb
-    " Add any database in current directory
-    if filereadable(g:TagFilesCscopePathXref)
-        exec "cs add " . g:TagFilesCscopePathXref
-    " Else add database pointed to by environment
-    elseif $CSCOPE_DB != ""
-        cs add $CSCOPE_DB
-    endif
-    " Use quickfix window to show results
-    set cscopequickfix=s-,g-,d-,c-,t-,e-,f-,i-,a-
-    set cscopepathcomp=3
-    set csverb
-    set cscopetag
-    " set cscopeverbose "Inform when different DB is added
-    " 's' symbol:   Find all references to the token under cursor
-    " 'g' global:   Find global definition(s) of the token under cursor
-    " 'c' calls:    Find all calls to the function name under cursor
-    " 't' text:     Find all instances of the text under cursor
-    " 'e' egrep:    Egrep search for the word under cursor
-    " 'f' file:     Open the filename under cursor
-    " 'i' includes: Find files that include the filename under cursor
-    " 'd' called:   Find functions that function under cursor calls
-    " nnoremap <F1> :cs find s <C-R>=expand("<cword>")<CR><CR>
-    nnoremap <F2> :cs find g <C-R>=expand("<cword>")<CR><CR>
-    nnoremap <F3> :cs find s <C-R>=expand("<cword>")<CR><CR>
-    nnoremap <F4> :cs find a <C-R>=expand("<cword>")<CR><CR>
-    " Same mappings but open in split view
-    " nnoremap <Leader><F1> :scs find s <C-R>=expand("<cword>")<CR><CR>
-    nnoremap <Leader><F2> :scs find g <C-R>=expand("<cword>")<CR><CR>
-    nnoremap <Leader><F3> :scs find s <C-R>=expand("<cword>")<CR><CR>
-    nnoremap <Leader><F4> :scs find a <C-R>=expand("<cword>")<CR><CR>
-endif
+nnoremap <silent> <F8> :TagbarToggle<CR>:wincmd =<CR>
 
 "===============================[ PERL-SUPPORT ]=====================================
 
@@ -746,33 +586,10 @@ let g:UltiSnipsEditSplit="vertical"
 nnoremap <Leader>bt :ToggleWhitespace<CR>
 nnoremap <Leader>br :StripWhitespace<CR>
 
-set completeopt=menuone,menu,longest,preview
-
-"===============================[ YOUCOMPLETEME ]====================================
-
-let g:ycm_path_to_python_interpreter='/usr/bin/python3'
-let g:ycm_show_diagnostics_ui = 0
-let g:ycm_add_preview_to_completeopt = 1
-let g:ycm_autoclose_preview_window_after_insertion = 1
-let g:ycm_filetype_whitelist = { 'c' : 1, 'cpp' : 1, 'h' : 1, 'hpp' : 1, 'python' : 1}
-let g:ycm_disable_for_files_larger_than_kb = 2500
-let g:ycm_semantic_triggers = {'python': ['re!from\s+\S+\s+import\s']}
-let g:ycm_global_ycm_extra_conf = '/home/mmo/.ycm_extra_conf.py'
-
-" This way we can set project specific tag files and ycm completion
-" with nerdtree <leader>cp project-change fake!
-"augroup SetTagsOnChDir
-    "au!
-    "au DirChanged * echo "I noticed that!!!"
-"augroup END
-
-nnoremap <F1> :YcmCompleter GoToDeclaration <cword><CR>
-nnoremap <leader><F1> :sp<cr> :YcmCompleter GoToDeclaration <cword><CR>
-
 "=================================[ LIGHTLINE ]======================================
 
 let g:lightline = {
-    \ 'colorscheme': 'onedark',
+    \ 'colorscheme': 'powerline',
     \ 'active': {
     \   'left': [ [ 'mode', 'paste' ],
     \             [ 'gitbranch', 'readonly', 'filename', 'modified' ] ]
@@ -801,16 +618,6 @@ nmap <leader>8 <Plug>BufTabLine.Go(8)
 nmap <leader>9 <Plug>BufTabLine.Go(9)
 nmap <leader>0 <Plug>BufTabLine.Go(10)
 
-"=================================[ PYTHON-MODE ]=====================================
-
-nnoremap <F12> :!python %<cr>
-
-"=====================================[ ALE ]=========================================
-
-let g:ale_set_loclist=0
-let g:ale_set_quickfix=1
-let g:ale_linters = {'c': []}
-
 "===================================[ FZF ]==========================================
 
 nnoremap <silent> <C-a> :Ag<CR>
@@ -827,19 +634,11 @@ inoremap <expr> <c-x><c-k> fzf#complete('cat /usr/share/dict/words')
 
 let g:fzf_commits_log_options = '--color=always --date=short --pretty=format:"%C(yellow)%h%C(reset) %C(green)%ad%C(reset) %C(red)|%C(reset) %s %C(bold blue)[%an]%C(reset)%C(yellow)%C(reset)"'
 
-"=================================[ VIMWIKI ]========================================
+"================================[ FUGITIVE ]========================================
 
-let wiki_1 = {}
-let wiki_1.path = '~/.vim/wiki/todo/'
-let wiki_1.path_html = '~/.vim/wiki/todo/html/'
-let wiki_1.auto_export = 1
-
-let wiki_2 = {}
-let wiki_2.path = '~/.vim/wiki/hacon/'
-let wiki_2.path_html = '~/.vim/wiki/hacon/html/'
-let wiki_2.auto_export = 1
-
-let g:vimwiki_list = [wiki_1, wiki_2]
+nnoremap <Leader>ggs :Gstatus<CR>
+nnoremap <Leader>ggd :Gvdiff<CR>
+nnoremap <leader>ggl :silent! 0Glog<CR>
 
 "===================================[ MISC ]=========================================
 
@@ -864,12 +663,6 @@ nnoremap <Leader>ddb :!linux/dbg/batch.exe<cr>
 " Adding Termdebug and choose binary to debug
 nnoremap <leader>dbg :call VimDbg()<CR>
 
-" Quickly jump to tag
-nnoremap <F10> :tag 
-
-" Generate Databases
-nnoremap <F9> :call ProcessCtagsDatabase()<CR> :call ProcessCscopeDatabase()<CR> :redraw!<CR>
-
 " Custom ToDo-Comments
 nnoremap <Leader>td O/* TODO [mmo <Esc>"=strftime("%Y-%m-%d %H:%M:%S")<CR>pa]: */
                         \<Esc>o/*                                 */<Esc>
@@ -878,6 +671,61 @@ inoremap <Leader>td /* TODO [mmo <Esc>"=strftime("%Y-%m-%d %H:%M:%S")<CR>pa]: */
                         \<Esc>o/*                                 */<Esc>
                         \<Esc>o/* ------------------------------- */<Esc>kBF*llR
 
+"====================================[ LSP ]=========================================
+
+let g:lsp_preview_float = 1 " Unter Ubuntu 18.04 deaktivieren
+let g:lsp_semantic_enabled = 0
+let g:lsp_diagnostics_enabled = 0
+let g:lsp_signs_enabled = 0
+
+"let g:lsp_log_verbose = 1
+"let g:lsp_log_file = expand('~/vim-lsp.log')
+"let g:asyncomplete_log_file = expand('~/asyncomplete.log')
+
+"set completeopt=menuone,noinsert,noselect
+
+if executable('clangd')
+    au User lsp_setup call lsp#register_server({
+        \ 'name': 'clangd',
+        \ 'cmd': {server_info->['clangd', '-header-insertion=never', '-background-index']},
+        \ 'whitelist': ['c', 'cpp', 'objc', 'objcpp'],
+        \ })
+endif
+
+"if executable('cquery')
+""   au User lsp_setup call lsp#register_server({
+""      \ 'name': 'cquery',
+""      \ 'cmd': {server_info->['cquery']},
+""      \ 'root_uri': {server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'compile_commands.json'))},
+""      \ 'initialization_options': { 'cacheDirectory': '/media/data/tmp' },
+""      \ 'whitelist': ['c', 'cpp', 'objc', 'objcpp', 'cc'],
+""      \ })
+"endif
+
+"if executable('ccls')
+""   au User lsp_setup call lsp#register_server({
+""      \ 'name': 'ccls',
+""      \ 'cmd': {server_info->['ccls']},
+""      \ 'root_uri': {server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'compile_commands.json'))},
+""      \ 'initialization_options': {'cache': {'directory': '/tmp/ccls/cache' }},
+""      \ 'whitelist': ['c', 'cpp', 'objc', 'objcpp', 'cc'],
+""      \ })
+"endif
+
+function! s:on_lsp_buffer_enabled() abort
+    setlocal omnifunc=lsp#complete
+    setlocal signcolumn=yes
+    nmap <buffer> <F1> <plug>(lsp-declaration)
+    nmap <buffer> <F2> <plug>(lsp-definition)
+    nmap <buffer> <F3> <plug>(lsp-references)
+    nmap <buffer> <F4> <plug>(lsp-workspace-symbol)
+    nmap <buffer> <F12> <plug>(lsp-rename)
+endfunction
+
+augroup lsp_install
+    au!
+    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+augroup END
 
 " highlight vertical line delimiter in a 'non-offensive' colour
 " highlight ColorColumn ctermbg=235 guibg=#2c2d27
