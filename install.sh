@@ -23,10 +23,10 @@ INSTALL_PACMAN=(
     "htop"
     "lsd"
     "meld"
-    "terminator"
+    "tilix"
     "the_silver_searcher"
     "zsh"
-    "quitzofratzl"
+    "quitzofratzl" # Testing dummy ...
 )
 
 INSTALL_GIT=(
@@ -37,6 +37,8 @@ SYMBOLIC_LINKS=(
     "/downloads:/media/data/downloads"
     "/dropbox:/media/data/Dropbox"
 )
+
+#=================================[ SYMBOLIC LINKS ]=================================
 
 echo "Creating symbolic links ..."
 
@@ -52,6 +54,8 @@ for i in "${SYMBOLIC_LINKS[@]}"; do
     fi
 done
 
+#================================[ PACMAN PACKAGES ]=================================
+
 echo "Installing packages via pacman ..."
 
 for i in "${INSTALL_PACMAN[@]}"; do
@@ -62,6 +66,8 @@ for i in "${INSTALL_PACMAN[@]}"; do
         echo -e "installing \e[93m'${i}'\e[0m ==> \e[92mSuccess.\e[0m"
     fi
 done
+
+#================================[ GITHUB PACKAGES ]=================================
 
 echo "Installing packages from github ..."
 
