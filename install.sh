@@ -5,6 +5,14 @@ GIT_CLONE_CMD="git clone --quiet"
 PKG_INSTALL_CMD="pacman --noconfirm --noprogressbar -S"
 LOG_DIR="${HOME}/.install_log"
 
+if [[ ! -d ${LOG_DIR} ]]; then
+    mkdir ${LOG_DIR}
+    if [[ $? -ne 0 ]]; then
+        echo "Cannot create ${LOG_DIR}. Exiting ..."
+        exit 1
+    fi
+fi
+
 INSTALL_AUR=(
     "vivaldi"
     "vivaldi-ffmpeg-codecs"
@@ -24,6 +32,7 @@ INSTALL_PACMAN=(
     "lsd"
     "meld"
     "tilix"
+    "fd"
     "the_silver_searcher"
     "zsh"
     "quitzofratzl" # Testing dummy ...
