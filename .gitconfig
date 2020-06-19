@@ -1,6 +1,10 @@
 [user]
 	name = Markus Moll
 	email = markus.moll@hacon.de
+[pull]
+	rebase = preserve
+[push]
+	default = simple
 [core]
 	editor = vim
 	excludesfile = /home/mmo/.gitignore
