@@ -143,25 +143,31 @@ if(has("gui_running"))
     set guioptions-=T
     set guioptions+=m
     set guioptions+=r
+    set guioptions-=l
     set guioptions-=L
-    set guifont=Hack\ Regular\ 11
-    "set guifont=Inconsolata\ Condensed\ Medium\ 14
+    "set guifont=Hack\ Regular\ 11
+    "set guifont=Inconsolata\ Regular\ 13
     "set guifont=Inconsolata\ 13
     "set guifont=Liberation\ Mono\ Regular\ 11
     "set guifont=Fira\ Code\ Retina\ 11
     "set guifont=CamingoCode\ Regular\ 11
     "set guifont=Input\ Mono\ Regular\ 11
     "set guifont=Fantasque\ Sans\ Mono\ 13
-    "set guifont=Droid\ Sans\ Mono\ Regular\ 11
+    set guifont=Droid\ Sans\ Mono\ Regular\ 12
     "set guifont=Monaco\ Regular\ 11
     "set guifont=Source\ Code\ Pro\ Medium\ 11
-    colorscheme gruvbox
+    colorscheme molokai
+    "colorscheme gruvbox
+    "colorscheme sonokai
+    "let g:sonokai_style = 'atlantis'
+    "let g:sonokai_enable_italic = 0
     set background=dark
     set lines=999 columns=999
 else
     set t_Co=256
     set background=dark
     colorscheme gruvbox
+    "colorscheme sonokai
     set termguicolors
 endif
 
@@ -455,13 +461,22 @@ endfunction
 
 "====================================[ AGREP ]=======================================
 
-nnoremap <silent><leader>g :Agrep -r <cword> *<cr>
-nnoremap <silent><leader>T :Agrep -r 'TODO \[mmo' *<cr>
-nnoremap <F6> :<C-U>exe v:count1.(bufwinnr('Agrep') == -1 ? 'cn' : 'Anext')<CR>
-nnoremap <Leader><F6> :<C-U>exe v:count1.(bufwinnr('Agrep') == -1 ? 'cp' : 'Aprev')<CR>
-nnoremap <Leader>a :Aclose<CR> :bdelete Agrep<CR>
+"nnoremap <silent><leader>g :Agrep -r <cword> *<cr>
+"nnoremap <silent><leader>T :Agrep -r 'TODO \[mmo' *<cr>
+"nnoremap <F6> :<C-U>exe v:count1.(bufwinnr('Agrep') == -1 ? 'cn' : 'Anext')<CR>
+"nnoremap <Leader><F6> :<C-U>exe v:count1.(bufwinnr('Agrep') == -1 ? 'cp' : 'Aprev')<CR>
+"nnoremap <Leader>a :Aclose<CR> :bdelete Agrep<CR>
 
-let g:agrep_default_flags = '-I -s --exclude=CHANGELOG'
+"let g:agrep_default_flags = '-I -s --exclude=CHANGELOG'
+
+"===================================[ GREPPER ]======================================
+
+let g:grepper = {}
+nnoremap <leader>g  :Grepper -tool rg -cword -noprompt<cr>
+let g:grepper.quickfix = 1
+let g:grepper.open = 1
+let g:grepper.tools =
+      \ ['rg', 'git', 'ag', 'ack', 'ack-grep', 'grep', 'findstr', 'pt', 'sift']
 
 "==================================[ NEOMAKE ]=======================================
 
@@ -504,6 +519,12 @@ let g:neomake_64bit_debug_maker = {
     \ 'errorformat': g:efmt
     \ }
 
+let g:neomake_training_maker = {
+    \ 'exe': 'make',
+    \ 'args': [],
+    \ 'errorformat': g:efmt
+    \ }
+
 function! SetWarningType(entry)
     if a:entry.type =~? '\m^[SPI]'
         let a:entry.type = 'I'
@@ -527,6 +548,7 @@ let g:neomake_warning_sign = {'text': '!!', 'texthl': 'NeomakeWarningSign'}
 let g:neomake_remove_invalid_entries = 1
 let g:neomake_open_list = 2
 
+nnoremap <Leader>tt  :Neomake! training<CR> :!bin/training<CR>
 nnoremap <Leader>r32 :Neomake! 32bit_release<CR>
 nnoremap <Leader>d32 :Neomake! 32bit_debug<CR>
 nnoremap <Leader>r64 :Neomake! 64bit_release<CR>
@@ -640,6 +662,29 @@ nnoremap <Leader>ggs :Gstatus<CR>
 nnoremap <Leader>ggd :Gvdiff<CR>
 nnoremap <leader>ggl :silent! 0Glog<CR>
 
+"=================================[ VIMWIKI ]========================================
+
+let wiki_1 = {}
+let wiki_1.path = '~/.vim/wiki/todo/'
+let wiki_1.path_html = '~/.vim/wiki/todo/html/'
+let wiki_1.auto_export = 1
+
+let wiki_2 = {}
+let wiki_2.path = '~/.vim/wiki/hacon/'
+let wiki_2.path_html = '~/.vim/wiki/hacon/html/'
+let wiki_2.auto_export = 1
+
+let g:vimwiki_list = [wiki_1, wiki_2]
+
+function CreateWikiHeader()
+    call inputsave()
+    let issue=toupper(input("Enter Jira issue id: ", "", "file"))
+    call inputrestore()
+    let date="*" . strftime("%Y-%m-%d") . "* "
+    let url=l:date . "[[https://jira.local.hacon.de/browse/" . l:issue . "|" . l:issue . "]]"
+    return l:url
+endfunction
+
 "===================================[ MISC ]=========================================
 
 " Pretty printing Json-files
@@ -659,6 +704,9 @@ nnoremap <C-k> :call ToggleCursorColumn()<CR>
 nnoremap <Leader>hd :call SetHafasDir()<cr>
 nnoremap <Leader>drb :!linux/rel/batch.exe<cr>
 nnoremap <Leader>ddb :!linux/dbg/batch.exe<cr>
+
+inoremap <silent>  ###  <C-R>=CreateWikiHeader()<CR>
+nnoremap <silent>  ###  <insert><C-R>=CreateWikiHeader()<CR><ESC>
 
 " Adding Termdebug and choose binary to debug
 nnoremap <leader>dbg :call VimDbg()<CR>
@@ -716,8 +764,11 @@ function! s:on_lsp_buffer_enabled() abort
     setlocal omnifunc=lsp#complete
     setlocal signcolumn=yes
     nmap <buffer> <F1> <plug>(lsp-declaration)
+    nmap <buffer> <leader><F1> :sp<cr><plug>(lsp-declaration)
     nmap <buffer> <F2> <plug>(lsp-definition)
+    nmap <buffer> <leader><F2> :sp<cr><plug>(lsp-definition)
     nmap <buffer> <F3> <plug>(lsp-references)
+    nmap <buffer> <leader><F3> :sp<cr><plug>(lsp-references)
     nmap <buffer> <F4> <plug>(lsp-workspace-symbol)
     nmap <buffer> <F12> <plug>(lsp-rename)
 endfunction
@@ -726,6 +777,36 @@ augroup lsp_install
     au!
     autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
 augroup END
+
+" tagfile folders
+let g:TagFilesBasePath       = "/media/data/.vimfiles/"  " Everything goes here!
+let g:TagFilesCtagsFileStd   = "stdclib"                 " Tags for /usr/include
+let g:TagFilesCtagsFileLocal = "localclib"               " Tags for local project
+let g:TagFilesCtagsPathStd   = g:TagFilesBasePath . g:TagFilesCtagsFileStd
+let g:TagFilesCtagsPathLocal = g:TagFilesBasePath . g:TagFilesCtagsFileLocal
+
+exec 'set tags+=' . g:TagFilesCtagsPathStd
+exec 'set tags+=' . g:TagFilesCtagsPathLocal
+
+" Generation of ctags databases
+" -----------------------------
+function! ProcessCtagsDatabase()
+    if !isdirectory(g:TagFilesBasePath)
+        call mkdir(g:TagFilesBasePath)
+    endif
+    " Generate stdlib database only once
+    if empty(glob(g:TagFilesCtagsPathStd))
+        exec "silent! !ctags -R -f " . g:TagFilesCtagsPathStd . " --sort=yes --c++-kinds=+p --fields=+iaS"
+                 \ "--extra=+qf --language-force=C++ --tag-relative=yes /usr/include/c++"
+    endif
+    " Generate Tag-file for local project files
+        exec "silent! !ctags -R -f " . g:TagFilesCtagsPathLocal . " --language-force=C++ --sort=yes"
+                        \ "--c++-kinds=+p --fields=+iaS --extra=+qf --tag-relative=yes *"
+    echo "Processed ctags database."
+endfunction
+
+" Generate Databases
+nnoremap <F9> :call ProcessCtagsDatabase()<CR> :redraw!<CR>
 
 " highlight vertical line delimiter in a 'non-offensive' colour
 " highlight ColorColumn ctermbg=235 guibg=#2c2d27
