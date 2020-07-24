@@ -1,7 +1,21 @@
+let mapleader = ","
+
 noremap ö l
 noremap l k
 noremap k j
 noremap j h
+
+noremap <Space>ö <c-w>l
+noremap <Space>l <c-w>k
+noremap <Space>k <c-w>j
+noremap <Space>j <c-w>h
+
+nnoremap <C-left>  :vs<cr>
+nnoremap <C-right> :vs<cr>
+nnoremap <C-up>    :sp<cr>
+nnoremap <C-down>  :sp<cr>
+
+nnoremap <up> :bd<cr>
 
 noremap H ^
 noremap L $
