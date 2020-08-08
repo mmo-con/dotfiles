@@ -151,14 +151,13 @@ if(has("gui_running"))
     "set guifont=Liberation\ Mono\ Regular\ 11
     "set guifont=Fira\ Code\ Retina\ 11
     "set guifont=CamingoCode\ Regular\ 11
-    "set guifont=Input\ Mono\ Regular\ 11
+    set guifont=Input\ Mono\ Narrow\ Regular\ 11
     "set guifont=Fantasque\ Sans\ Mono\ 13
-    set guifont=Droid\ Sans\ Mono\ Regular\ 12
+    "set guifont=Droid\ Sans\ Mono\ Regular\ 12
     "set guifont=Monaco\ Regular\ 11
     "set guifont=Source\ Code\ Pro\ Medium\ 11
     colorscheme molokai
     "colorscheme gruvbox
-    "colorscheme sonokai
     "let g:sonokai_style = 'atlantis'
     "let g:sonokai_enable_italic = 0
     set background=dark
@@ -568,17 +567,17 @@ augroup END
 
 "==================================[ NERDTREE ]======================================
 
-let NERDTreeWinSize = 25
-let NERDTreeMinimalUI = 1
-let NERDTreeStatusline = 0
-let NERDTreeChDirMode = 2
-let NERDTreeShowHidden = 0
-let NERDTreeRespectWildIgnore = 1
-let NERDTreeDirArrowExpandable = '+'
-let NERDTreeDirArrowCollapsible = '-'
-
-nnoremap <Leader><F8> :NERDTreeToggle<CR>:wincmd =<CR>
-nnoremap <Leader>cp :NERDTreeClose<CR>:bufdo bd<CR>:NERDTree<CR>
+"let NERDTreeWinSize = 25
+"let NERDTreeMinimalUI = 1
+"let NERDTreeStatusline = 0
+"let NERDTreeChDirMode = 2
+"let NERDTreeShowHidden = 0
+"let NERDTreeRespectWildIgnore = 1
+"let NERDTreeDirArrowExpandable = '+'
+"let NERDTreeDirArrowCollapsible = '-'
+"
+"nnoremap <Leader><F8> :NERDTreeToggle<CR>:wincmd =<CR>
+"nnoremap <Leader>cp :NERDTreeClose<CR>:bufdo bd<CR>:NERDTree<CR>
 
 "==================================[ TAGBAR ]========================================
 
@@ -719,12 +718,23 @@ inoremap <Leader>td /* TODO [mmo <Esc>"=strftime("%Y-%m-%d %H:%M:%S")<CR>pa]: */
                         \<Esc>o/*                                 */<Esc>
                         \<Esc>o/* ------------------------------- */<Esc>kBF*llR
 
+"==================================[ PYTHON ]========================================
+
+autocmd BufWritePost *.py call flake8#Flake8()
+
+let $PYTHONUNBUFFERED=1
+let g:asyncrun_open = 15
+"nnoremap <F10> :AsyncRun python "$(VIM_FILEPATH)"<cr>
+nnoremap <F10> :AsyncRun -mode=term -rows=20 python "$(VIM_FILEPATH)"<cr>
+
 "====================================[ LSP ]=========================================
 
 let g:lsp_preview_float = 1 " Unter Ubuntu 18.04 deaktivieren
 let g:lsp_semantic_enabled = 0
 let g:lsp_diagnostics_enabled = 0
 let g:lsp_signs_enabled = 0
+let g:rainbow_active = 1
+"let g:lsp_cxx_hl_use_text_props = 1
 
 "let g:lsp_log_verbose = 1
 "let g:lsp_log_file = expand('~/vim-lsp.log')
@@ -741,23 +751,23 @@ if executable('clangd')
 endif
 
 "if executable('cquery')
-""   au User lsp_setup call lsp#register_server({
-""      \ 'name': 'cquery',
-""      \ 'cmd': {server_info->['cquery']},
-""      \ 'root_uri': {server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'compile_commands.json'))},
-""      \ 'initialization_options': { 'cacheDirectory': '/media/data/tmp' },
-""      \ 'whitelist': ['c', 'cpp', 'objc', 'objcpp', 'cc'],
-""      \ })
+   "au User lsp_setup call lsp#register_server({
+      ""\ 'name': 'cquery',
+      ""\ 'cmd': {server_info->['cquery']},
+      ""\ 'root_uri': {server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'compile_commands.json'))},
+      ""\ 'initialization_options': { 'cacheDirectory': '/media/data/tmp', 'highlight': { 'enabled' : v:true }, 'emitInactiveRegions': v:true },
+      ""\ 'whitelist': ['c', 'cpp', 'objc', 'objcpp', 'cc'],
+      ""\ })
 "endif
 
 "if executable('ccls')
-""   au User lsp_setup call lsp#register_server({
-""      \ 'name': 'ccls',
-""      \ 'cmd': {server_info->['ccls']},
-""      \ 'root_uri': {server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'compile_commands.json'))},
-""      \ 'initialization_options': {'cache': {'directory': '/tmp/ccls/cache' }},
-""      \ 'whitelist': ['c', 'cpp', 'objc', 'objcpp', 'cc'],
-""      \ })
+   "au User lsp_setup call lsp#register_server({
+      ""\ 'name': 'ccls',
+      ""\ 'cmd': {server_info->['ccls']},
+      ""\ 'root_uri': {server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'compile_commands.json'))},
+      ""\ 'initialization_options': {'cache': {'directory': '/tmp/ccls/cache' }, 'highlight': { 'lsRanges' : v:true }},
+      ""\ 'whitelist': ['c', 'cpp', 'objc', 'objcpp', 'cc'],
+      ""\ })
 "endif
 
 function! s:on_lsp_buffer_enabled() abort
