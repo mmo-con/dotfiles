@@ -20,6 +20,7 @@ INSTALL_AUR=(
 )
 
 INSTALL_PACMAN=(
+    "bashtop"
     "cscope"
     "ctags"
     "cmake"
