@@ -1,0 +1,122 @@
+{
+    // The CMake build directory must be set to the same path that was passed to the environment script after the -c option. ${workspaceFolder} evaluates to the folder that was opened with Visual Studio Code, which should be $TPSROOT in a sourced environment.
+    // "cmake.buildDirectory": "${workspaceFolder}/cmake-builds/debug",
+   
+    // [EDIT] Visual Studio Code runs CMake to populate its index of header and source files. By default, "cmake" is used, which usually points to the (outdated) CMake version installed by the Ubuntu package manager. Since the environment script uses a more recent CMake version that is shipped with Conan, this will result in an error like "This CMake cache was initialized with CMake version 3.17.1, but is now called with version 3.15.2.". To avoid this version mismatch, locate the CMake binary currently used by the environment script and insert it here:
+    // "cmake.cmakePath": "/media/dump/deps/cmake/3.15.2/tps/stable/package/*/bin/cmake",
+   
+    // Anmerkung @tsch:
+    // ich hab hier nur cmake drinstehen, wenn code aus der gesourced'ten Umgebung gestartet wird, wird für
+    // vscode automatisch die richtige Version benutzt
+   
+    // Automatically configure the CMake project when opening a TPS folder:
+    "cmake.configureOnOpen": true,
+   
+    // Number of parallel jobs when building from Visual Studio Code:
+    "cmake.parallelJobs": 80,
+   
+    // Do not ignore whitespace changes in diffs:
+    "diffEditor.ignoreTrimWhitespace": false,
+   
+    // [OPTIONAL] Specify the desired font size in text editors:
+    "editor.fontSize": 16,
+   
+    // [OPTIONAL] To help spot some missing or surplus whitespaces, you may instruct Visual Studio Code to render leading and trailing whitespaces as dots:
+    "editor.renderWhitespace": "boundary",
+   
+    // Draw a vertical ruler indicating the maximum number of characters per line (see TPS coding style):
+    "editor.rulers": [120],
+   
+    // The number of spaces that are equivalent to one TAB character (see TPS coding style):
+    "editor.tabSize": 2,
+   
+    // Ensure UTF-8 encoding:
+    "files.encoding": "utf8",
+   
+    // [OPTIONAL] Turn off telemetry:
+    "telemetry.enableCrashReporter": false,
+    "telemetry.enableTelemetry": false,
+   
+    // [OPTIONAL] LLDB configuration:
+    // NOTE:
+    // Extension CodeLLDB v1.5.3 --> use lldb-10 on remote host (recommended)
+    // Extension CodeLLDB v1.5.0 --> use lldb-8 (lldb.library as below on remote host) 
+    // "lldb.library": "/opt/hacon/.conan/data/llvm/8.0.0/tps/stable/package/cf6bce1991776f8f4d1fafe1624d3170a38ad54c/lib/liblldb.so", // put your individual path here, which is used by conan
+    "lldb.evaluationTimeout" : 20,
+    "lldb.displayFormat": "auto",
+    "lldb.showDisassembly": "auto",
+    "lldb.dereferencePointers": true,
+    "window.zoomLevel": -1,
+    "vim.easymotion": true,
+    "vim.incsearch": true,
+    "vim.useSystemClipboard": true,
+    "vim.useCtrlKeys": true,
+    "vim.hlsearch": true,
+    "vim.insertModeKeyBindings": [
+      {
+        "before": ["j", "k"],
+        "after": ["<Esc>"]
+      },
+    ],
+    "vim.normalModeKeyBindingsNonRecursive": [
+      {
+        "before": ["ö"],
+        "after": ["l"]
+      },
+      {
+        "before": ["l"],
+        "after": ["k"]
+      },
+      {
+        "before": ["k"],
+        "after": ["j"]
+      },
+      {
+        "before": ["j"],
+        "after": ["h"]
+      },
+      {
+        "before": ["H"],
+        "after": ["^"]
+      },
+      {
+        "before": ["L"],
+        "after": ["$"]
+      },
+    ],
+    "vim.visualModeKeyBindingsNonRecursive": [
+      {
+        "before": ["ö"],
+        "after": ["l"]
+      },
+      {
+        "before": ["l"],
+        "after": ["k"]
+      },
+      {
+        "before": ["k"],
+        "after": ["j"]
+      },
+      {
+        "before": ["j"],
+        "after": ["h"]
+      },
+      {
+        "before": ["L"],
+        "after": ["g", "_"]
+      },
+      {
+        "before": ["<"],
+        "after": ["<", "g", "v", "h"]
+      },
+      {
+        "before": [">"],
+        "after": [">", "g", "v", "h"]
+      },
+    ],
+    "vim.leader": ",",
+    "vim.handleKeys": {
+      "<C-a>": false,
+      "<C-f>": false
+    }
+  }
