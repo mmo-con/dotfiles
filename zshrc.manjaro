@@ -11,6 +11,8 @@ if [[ -e /usr/share/fzf/key-bindings.zsh ]]; then
   source /usr/share/fzf/key-bindings.zsh
 fi
 
+export FZF_DEFAULT_COMMAND='rg --files'
+
 alias ks='ls --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
 alias kl='ls -l --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
 alias ka='ls -la --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
@@ -29,7 +31,7 @@ ex ()
       *.tar.bz2)   tar xjf $1   ;;
       *.tar.gz)    tar xzf $1   ;;
       *.bz2)       bunzip2 $1   ;;
-      *.rar)       unrar x $1     ;;
+      *.rar)       unrar x $1   ;;
       *.gz)        gunzip $1    ;;
       *.tar)       tar xf $1    ;;
       *.tbz2)      tar xjf $1   ;;
@@ -41,5 +43,22 @@ ex ()
     esac
   else
     echo "'$1' is not a valid file"
+  fi
+}
+
+kp ()
+{
+  ### PROCESS
+  # mnemonic: [K]ill [P]rocess
+  # show output of "ps -ef", use [tab] to select one or multiple entries
+  # press [enter] to kill selected processes and go back to the process list.
+  # or press [escape] to go back to the process list. Press [escape] twice to exit completely.
+
+  local pid=$(ps -ef | sed 1d | eval "fzf ${FZF_DEFAULT_OPTS} -m --header='[kill:process]'" | awk '{print $2}')
+
+  if [ "x$pid" != "x" ]
+  then
+    echo $pid | xargs kill -${1:-9}
+    kp
   fi
 }

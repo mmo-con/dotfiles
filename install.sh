@@ -21,7 +21,6 @@ INSTALL_AUR=(
 
 INSTALL_PACMAN=(
     "bashtop"
-    "cscope"
     "ctags"
     "cmake"
     "dfc"
@@ -34,6 +33,7 @@ INSTALL_PACMAN=(
     "meld"
     "tilix"
     "fd"
+    "ripgrep"
     "the_silver_searcher"
     "zsh"
     "quitzofratzl" # Testing dummy ...
