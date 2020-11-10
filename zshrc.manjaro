@@ -13,14 +13,17 @@ fi
 
 export FZF_DEFAULT_COMMAND='rg --files'
 
-alias ks='ls --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
-alias kl='ls -l --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
-alias ka='ls -la --group-directories-first --time-style=+"%d.%m.%Y %H:%M" --color=auto -F'
+# lsd as ls-substitute
+# alias la='lsd --group-dirs=first --icon=never -l -A -F'
+# alias ll='lsd --group-dirs=first --icon=never -l -F'
+# alias lt='lsd --group-dirs=first --icon=never -l -tr -F'
+# alias lu='lsd --group-dirs=first --icon=never -l -S -F'
 
-alias la='lsd --group-dirs=first --icon=never -l -A -F'
-alias ll='lsd --group-dirs=first --icon=never -l -F'
-alias lt='lsd --group-dirs=first --icon=never -l -tr -F'
-alias lu='lsd --group-dirs=first --icon=never -l -S -F'
+# exa as ls-substitute
+alias la='exa -agl --time-style=long-iso --group-directories-first'
+alias ll='exa -gl --time-style=long-iso --group-directories-first'
+alias lt='exa -gl --sort=time --time-style=long-iso --group-directories-first'
+alias lr='exa -glT --time-style=long-iso --group-directories-first'
 
 alias vv='vim -o `fzf`'
 
@@ -31,7 +34,7 @@ ex ()
       *.tar.bz2)   tar xjf $1   ;;
       *.tar.gz)    tar xzf $1   ;;
       *.bz2)       bunzip2 $1   ;;
-      *.rar)       unrar x $1   ;;
+      *.rar)       unrar x $1     ;;
       *.gz)        gunzip $1    ;;
       *.tar)       tar xf $1    ;;
       *.tbz2)      tar xjf $1   ;;
