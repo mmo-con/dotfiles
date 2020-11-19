@@ -14,6 +14,11 @@
    
     // Number of parallel jobs when building from Visual Studio Code:
     "cmake.parallelJobs": 80,
+
+    // In case of manual installation
+    // "clangd.path": "/media/dump/clangd/clangd_snapshot_20201115/bin/clangd",
+    "clangd.arguments": ["-pretty", "--background-index"],
+    "clangd.semanticHighlighting": true,
    
     // Do not ignore whitespace changes in diffs:
     "diffEditor.ignoreTrimWhitespace": false,
@@ -46,6 +51,7 @@
     "lldb.displayFormat": "auto",
     "lldb.showDisassembly": "auto",
     "lldb.dereferencePointers": true,
+    "todo.embedded.include": [""],
     "window.zoomLevel": -1,
     "vim.easymotion": true,
     "vim.incsearch": true,
@@ -118,5 +124,6 @@
     "vim.handleKeys": {
       "<C-a>": false,
       "<C-f>": false
-    }
+    },
+    "C_Cpp.clang_format_style": "${workspace}/.clang-format"
   }
