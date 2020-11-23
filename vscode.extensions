@@ -1,0 +1,13 @@
+
+code --list-extensions
+
+eamodio.gitlens
+jacobdufault.fuzzy-search
+llvm-vs-code-extensions.vscode-clangd
+mhutchie.git-graph
+ms-vscode-remote.remote-ssh
+ms-vscode-remote.remote-ssh-edit
+ms-vscode.cmake-tools
+ms-vscode.cpptools
+sainnhe.gruvbox-material
+vscodevim.vim
