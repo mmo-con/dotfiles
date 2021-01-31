@@ -38,7 +38,7 @@
     "editor.rulers": [120],
    
     // The number of spaces that are equivalent to one TAB character (see TPS coding style):
-    "editor.tabSize": 2,
+    "editor.tabSize": 4,
    
     // Ensure UTF-8 encoding:
     "files.encoding": "utf8",
