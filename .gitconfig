@@ -1,13 +1,15 @@
 [user]
-	name = Markus Moll
-	email = markus.moll@hacon.de
-[pull]
-	rebase = preserve
+    name = Markus Moll
+    email = markus.moll@hacon.de
 [push]
-	default = simple
+    default = simple
+[pull]
+    rebase = true
+[fetch]
+    prune = true
 [core]
-	editor = vim
-	excludesfile = /home/mmo/.gitignore
+    editor = vim
+    excludesfile = /home/mmo/.gitignore
 [diff]
     tool = meld
 [difftool]
@@ -15,20 +17,24 @@
 [difftool "meld"]
     cmd = meld "$LOCAL" "$REMOTE"
 [merge]
-	tool = meld
-	prompt = false
+    tool = meld
+    prompt = false
 [mergetool "meld"]
     cmd = meld "$LOCAL" "$MERGED" "$REMOTE" --output "$MERGED"
+[submodule]
+    recurse = true
 [alias]
-	co = checkout
-	br = branch
-	ci = commit
-	st = status --short
-	df = difftool -d
-    lg = log --pretty=oneline
-	unstage = reset HEAD --
+    co = checkout
+    br = branch
+    ci = commit
+    st = status --short --branch
+    df = difftool -d
+    lg = log --date=format:'%Y-%m-%d' --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) %C(green)%ad%C(reset) %C(white)%s%C(reset) %C(red)%an%C(reset)%C(bold yellow)%d%C(reset)'
+    unstage = reset HEAD --
+    publish = push -u origin HEAD
+    rollback = reset --hard HEAD
 [color]
-	branch = auto
-	diff = auto
-	interactive = auto
-	status = auto
+    branch = auto
+    diff = auto
+    interactive = auto
+    status = auto
