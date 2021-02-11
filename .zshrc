@@ -10,6 +10,10 @@ fi
 if [[ -e /usr/share/fzf/key-bindings.zsh ]]; then
   source /usr/share/fzf/key-bindings.zsh
 fi
+# Use FZF completions if installed
+if [[ -e /usr/share/fzf/completion.zsh ]]; then
+  source /usr/share/fzf/completion.zsh
+fi
 
 unsetopt nomatch
 
