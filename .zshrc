@@ -17,7 +17,7 @@ fi
 
 unsetopt nomatch
 
-export FZF_DEFAULT_COMMAND='rg --files'
+export FZF_DEFAULT_COMMAND='fd --type f'
 
 # exa as ls-substitute
 alias la='exa -agl --time-style=long-iso --group-directories-first'
