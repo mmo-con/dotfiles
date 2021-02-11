@@ -28,6 +28,7 @@ alias lr='exa -glT --time-style=long-iso --group-directories-first'
 alias vv='vim -o `fzf`'
 alias uyd='sudo curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /dropbox/skripte/ytd'
 alias ytd='/dropbox/skripte/ytd'
+alias sp="pacman -Slq | fzf --multi --preview 'pacman -Si {1}' | xargs -ro sudo pacman -S"
 
 ex ()
 {
