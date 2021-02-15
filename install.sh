@@ -19,6 +19,9 @@ INSTALL_AUR=(
     "vivaldi-widevine" # evtl ...
 )
 
+# https://github.com/dandavison/delta
+# https://github.com/wfxr/forgit
+
 INSTALL_PACMAN=(
     "bashtop"
     "ctags"
