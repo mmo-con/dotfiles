@@ -14,6 +14,10 @@ fi
 if [[ -e /usr/share/fzf/completion.zsh ]]; then
   source /usr/share/fzf/completion.zsh
 fi
+# Use forgit if installed
+if [[ -e ~/opt/forgit/forgit.plugin.zsh ]]; then
+  source ~/opt/forgit/forgit.plugin.zsh
+fi
 
 unsetopt nomatch
 
