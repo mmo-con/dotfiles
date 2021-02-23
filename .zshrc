@@ -21,6 +21,7 @@ fi
 
 unsetopt nomatch
 
+export TERM="xterm-256color"
 export FZF_DEFAULT_COMMAND='fd --type f'
 
 # exa as ls-substitute
