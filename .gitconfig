@@ -30,8 +30,17 @@
     st = status --short --branch
     df = difftool -d
     lg = log --date=format:'%Y-%m-%d' --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) %C(green)%ad%C(reset) %C(white)%s%C(reset) %C(red)%an%C(reset)%C(bold yellow)%d%C(reset)'
+    # Reword the message of the last local commit
+    reword = commit --amend
+    # Remove file from the staging are but keep all modifications
     unstage = reset HEAD --
+    # Revert last local commit and put it in the staging area
+    uncommit = reset --soft HEAD~1
+    # Show commits committed locally but not yet pushed to remote
+    review-local = "!git lg @{push}.."
+    # Push local branch to remote and set upstream
     publish = push -u origin HEAD
+    # Revert all local changes of all files that have not yet been committed
     rollback = reset --hard HEAD
 [color]
     branch = auto
