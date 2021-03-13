@@ -12,5 +12,9 @@
             "C": "/usr/bin/gcc",
             "CXX": "/usr/bin/g++"
         }
+    },
+    {
+    "name": "x64 7.5.0",
+    "toolchainFile": "/opt/hafas/dev/build-tools/linux/gcc/7.5.0/x86_64-pc-linux-gnu.cmake"
     }
 ]
