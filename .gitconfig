@@ -42,6 +42,14 @@
     publish = push -u origin HEAD
     # Revert all local changes of all files that have not yet been committed
     rollback = reset --hard HEAD
+    # Find merge commit for given commit hash
+    find-merge = "!f() { git l ${1}..${2-master} --ancestry-path --merges --reverse | head -n5; }; f"
+    # Show current kernel release (cwd to kernel first)
+    show-kernel-release = !git describe --tags --candidates=42 --abbrev=0 --match=LTS/*
+    # Show current HSM release version
+    show-release = !git describe --tags --candidates=42 --abbrev=0 --match="release/*" --match="release-candidate/*"
+    # Show diffs between the current branch and the std-release the branch is based upon
+    show-release-diff = !git diff $(git show-release)..HEAD
 [color]
     branch = auto
     diff = auto
