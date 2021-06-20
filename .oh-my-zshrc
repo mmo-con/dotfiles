@@ -5,6 +5,10 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
+        source /etc/profile.d/vte.sh
+fi
+
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
@@ -140,6 +144,11 @@ alias hcuoebb='ssh -t hafas@hafas-dev-srv-01 "cd /opt/hafas/pub/oebb/main/server
 alias hcumts='ssh -t mts@hafas-pub-srv-06 "cd /opt/hafas/pub/mts/main/server; ./server.exe -vv; bash -il"'
 alias hcurmv='ssh -t rmv@hafas-pub-srv-06 "cd /opt/hafas/pub/rmv/main/server; ./server.exe -vv; bash -il"'
 alias hculux='ssh -t mmilux@hafas-pub-srv-01 "cd /opt/hafas/pub/mmilux/main-1/server; ./server.exe -vv; bash -il"'
+
+# Directly jump to frequently used locations
+alias hcutrafo='ssh -t mmo@hafas-trafo-02 "cd /opt/hafas/converter; bash -il"'
+alias hcubuild1='ssh -t mmo@hafas-build-srv-01 "cd /server/hafas/hafas/projekte/internet; bash -il"'
+alias hcudata='ssh -t mmo@laudrup "cd /server/data; bash -il"'
 alias hcuhci='ssh -t hafas-hci@hafas-pub-srv-04 "cd /opt/hafas/pub; bash -il"'
 
 function ex ()
