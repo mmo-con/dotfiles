@@ -118,9 +118,8 @@ export TERM="xterm-256color"
 export FZF_DEFAULT_COMMAND='fd --type f'
 export HOST_OS="linux"
 
-# exa as ls-substitute
-alias la='exa -agl --time-style=long-iso --group-directories-first'
 alias ll='exa -gl --time-style=long-iso --group-directories-first'
+alias la='exa -agl --time-style=long-iso --group-directories-first'
 alias lt='exa -gl --sort=time --time-style=long-iso --group-directories-first'
 alias lr='exa -glT --time-style=long-iso --group-directories-first'
 
@@ -146,10 +145,11 @@ alias hcurmv='ssh -t rmv@hafas-pub-srv-06 "cd /opt/hafas/pub/rmv/main/server; ./
 alias hculux='ssh -t mmilux@hafas-pub-srv-01 "cd /opt/hafas/pub/mmilux/main-1/server; ./server.exe -vv; bash -il"'
 
 # Directly jump to frequently used locations
-alias hcutrafo='ssh -t mmo@hafas-trafo-02 "cd /opt/hafas/converter; bash -il"'
-alias hcubuild1='ssh -t mmo@hafas-build-srv-01 "cd /server/hafas/hafas/projekte/internet; bash -il"'
-alias hcudata='ssh -t mmo@laudrup "cd /server/data; bash -il"'
+alias hcudemo='ssh -t hafas@demo "cd /opt/httpd/demo.hafas.de/hafas/cgi-bin/pub; bash -il"'
 alias hcuhci='ssh -t hafas-hci@hafas-pub-srv-04 "cd /opt/hafas/pub; bash -il"'
+alias hcutrafo='ssh -t mmo@hafas-trafo-02 "cd /opt/hafas/converter; /home/mmo/.tools/zsh/bin/zsh -l"'
+alias hcubuild1='ssh -t mmo@hafas-build-srv-01 "cd /server/hafas/hafas/projekte/internet; /home/mmo/.tools/zsh/bin/zsh -l"'
+alias hcudata='ssh -t mmo@laudrup "cd /server/data; /home/mmo/.tools/zsh/bin/zsh -l"'
 
 function ex ()
 {
