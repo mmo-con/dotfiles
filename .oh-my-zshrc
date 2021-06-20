@@ -112,6 +112,7 @@ source $ZSH/oh-my-zsh.sh
 
 export TERM="xterm-256color"
 export FZF_DEFAULT_COMMAND='fd --type f'
+export HOST_OS="linux"
 
 # exa as ls-substitute
 alias la='exa -agl --time-style=long-iso --group-directories-first'
