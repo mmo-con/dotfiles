@@ -151,6 +151,45 @@ alias hcutrafo='ssh -t mmo@hafas-trafo-02 "cd /opt/hafas/converter; /home/mmo/.t
 alias hcubuild1='ssh -t mmo@hafas-build-srv-01 "cd /server/hafas/hafas/projekte/internet; /home/mmo/.tools/zsh/bin/zsh -l"'
 alias hcudata='ssh -t mmo@laudrup "cd /server/data; /home/mmo/.tools/zsh/bin/zsh -l"'
 
+function fhd {
+    local p="/server/hafas/dokus/deutsch/standard/transform"
+    local f="rohdaten-540_9.pdf"
+    getAndShowFile ${p} ${f}
+}
+
+function ftd {
+    local p="/server/hafas/dokus/deutsch/standard/transform"
+    local f="transform-540.pdf"
+    getAndShowFile ${p} ${f}
+}
+
+function fbd {
+    local p="/server/hafas/dokus/deutsch/hafas/batch"
+    local f="batch.internal.pdf"
+    getAndShowFile ${p} ${f}
+}
+
+function getAndShowFile {
+    local p="$1"
+    local f="$2"
+    local u="${USER}"
+    local h="server"
+    local d="${HOME}/hafas/doku"
+
+    if [ ! -d ${d} ]; then
+        mkdir -p ${d}
+    fi
+
+    scp "${u}@${h}:${p}/${f}" "${d}"
+    if [ $? -ne 0 ]; then
+        echo "Cannot fetch file."
+    fi
+
+    if [ -f "${d}/${f}" ]; then
+        evince "${d}/${f}"
+    fi
+}
+
 function ex ()
 {
     if [ -f $1 ] ; then
