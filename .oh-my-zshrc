@@ -144,7 +144,9 @@ alias hcuoebb='ssh -t hafas@hafas-dev-srv-01 "cd /opt/hafas/pub/oebb/main/server
 alias hcumts='ssh -t mts@hafas-pub-srv-06 "cd /opt/hafas/pub/mts/main/server; ./server.exe -vv; bash -il"'
 alias hcurmv='ssh -t rmv@hafas-pub-srv-06 "cd /opt/hafas/pub/rmv/main/server; ./server.exe -vv; bash -il"'
 alias hculux='ssh -t mmilux@hafas-pub-srv-01 "cd /opt/hafas/pub/mmilux/main-1/server; ./server.exe -vv; bash -il"'
+alias hcuvmt='ssh -t hafas@athene "cd /opt/hafas/dev/vmt/main/server; ./server.exe -vv; bash -il"'
 alias hcudb='ssh -t dbahn@hafas-pub-srv-01 "cd /opt/hafas/pub/db-vendo/main-1/server; ./server.exe -vv; bash -il"'
+alias hcudk='ssh -t hafas@hafas-dev-srv-04 "cd /opt/hafas/dev/dk/main/server; ./server.exe -vv; bash -il"'
 
 # Directly jump to frequently used locations
 alias hcudemo='ssh -t hafas@demo "cd /opt/httpd/demo.hafas.de/hafas/cgi-bin/pub; bash -il"'
