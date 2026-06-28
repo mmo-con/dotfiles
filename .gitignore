@@ -1,0 +1,23 @@
+# Local editor and OS artifacts
+.DS_Store
+Thumbs.db
+
+# Vim/Neovim swap and backup files
+*.swp
+*.swo
+*~
+
+# Local IDE settings (not part of managed dotfiles)
+.idea/
+.vscode/
+
+# Generic local cache/temp folders in repo root
+.cache/
+tmp/
+
+# Avoid accidentally committing local chezmoi state files
+.chezmoi.toml
+
+# Managed executable despite the user's global bin/ ignore rule
+!dot_local/bin/
+!dot_local/bin/executable_ssh-add-keys

@@ -1,0 +1,62 @@
+# C/C++ / CMake
+# Build-Verzeichnisse
+build*/
+cmake-build-*/
+bin/
+out/
+
+# CMake generierte Dateien
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+install_manifest.txt
+compile_commands.json
+
+# Binärdateien und Bibliotheken
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Python / uv
+# Virtuelle Umgebungen
+.venv/
+venv/
+env/
+
+# uv spezifische Dateien
+.uv/
+uv.lock
+
+# Python Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDEs
+# CLion / PyCharm (JetBrains)
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# VS Code
+.cache/
+.clangd/
+.vscode/
+
+# Allgemeine Softwareentwicklung
+# Betriebssystem-Spezifisch
+.DS_Store
+Thumbs.db
+
+# Log-Dateien
+*.log
+
+# Temp-Dateien
+*.tmp
+*.bak
+*~

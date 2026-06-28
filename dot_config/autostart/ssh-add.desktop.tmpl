@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Load SSH keys into agent
+Comment=Adds RSA and Ed25519 keys to the ssh-agent via ksshaskpass; passphrases are cached in KWallet
+Exec={{ .chezmoi.homeDir }}/.local/bin/ssh-add-keys
+Terminal=false
+X-KDE-autostart-phase=2
+OnlyShowIn=KDE;

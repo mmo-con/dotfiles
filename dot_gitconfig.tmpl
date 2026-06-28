@@ -1,0 +1,88 @@
+[user]
+    name = Markus Moll
+    email = {{ .email }}
+[init]
+    defaultBranch = main
+[push]
+    default = upstream
+[pull]
+    rebase = merges
+    ff = only
+[fetch]
+    prune = true
+[core]
+    editor = nvim
+    excludesfile = {{ .chezmoi.homeDir }}/.gitignore
+    pager = delta
+[diff]
+    tool = meld
+    algorithm = histogram
+[difftool]
+    prompt = false
+[difftool "meld"]
+    cmd = meld "$LOCAL" "$REMOTE"
+[merge]
+    tool = meld
+    prompt = false
+    ff = true
+[mergetool "meld"]
+    cmd = meld "$LOCAL" "$MERGED" "$REMOTE" --output "$MERGED"
+[submodule]
+    recurse = true
+[alias]
+    co = checkout --recurse-submodules
+    br = branch
+    ci = commit
+    st = status --short --branch
+    # [l]ist [t]ags
+    lt = tag --list
+    # [f]ind [t]ags -> "git ft dtag" finds all tags matching "dtag"
+    ft = "!f() { git tag --list | rg ${1}; }; f"
+    # [f]ind [b]ranch -> "git fb 6407" finds all branches matching "6407"
+    fb = "!f() { git br -r | rg ${1}; }; f"
+    df = difftool -d
+    usm = submodule update --init --recursive
+    # [sw]itch branch to X and update submodules
+    sw = "!f() { git co ${1} && git usm; }; f"
+    lg = log --date=format:'%Y-%m-%d' --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) %C(green)%ad%C(reset) %C(normal)%s%C(reset) %C(red)%an%C(reset)%C(bold yellow)%d%C(reset)'
+    # List branches that contain the given commit
+    contains= "!f() { git branch -a --contains ${1}; }; f"
+    # Reword the message of the last local commit
+    reword = commit --amend
+    # Remove file from the staging are but keep all modifications
+    unstage = reset HEAD --
+    # Revert last local commit and put it in the staging area
+    uncommit = reset --soft HEAD~1
+    # Show commits committed locally but not yet pushed to remote
+    review-local = "!git lg @{push}.."
+    # Push local branch to remote and set upstream
+    publish = push -u origin HEAD
+    # Revert all local changes of all files that have not yet been committed
+    rollback = reset --hard HEAD
+    # Find merge commits up to origin's default branch, or an explicit target branch
+    find-merge = "!f() { if [ -z \"$1\" ]; then echo 'Usage: git find-merge <commit> [target-branch]' >&2; return 2; fi; default_ref=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD) || { echo \"Cannot determine origin's default branch. Run: git remote set-head origin -a\" >&2; return 1; }; default_branch=${default_ref#origin/}; git lg \"$1..${2:-$default_branch}\" --ancestry-path --merges --reverse | head -n 5; }; f"
+    # Show current kernel release (cwd to kernel first)
+    show-kernel-release = !git describe --tags --candidates=42 --abbrev=0 --match=LTS/*
+    # Show current HSM release version
+    show-release = !git describe --tags --candidates=100 --abbrev=0 --match="release/*" --match="release-candidate/*"
+    # Show diffs between the passed branch and the std-release the branch is based upon
+    show-release-diff = "!f() { git diff $(git show-release)..${1}; }; f"
+    # Show diffs between the current branch and the std-release the branch is based upon
+    show-this-release-diff = !git show-release-diff HEAD
+    # Show merge commits available on $2 but not on $1
+    show-issue-diff = "!f() { git log --oneline ${1}..${2} | grep \"into 'master'\"; }; f"
+    # Fast-forward origin's default branch without checkout, or an explicit branch
+    ff-default = "!f() { default_ref=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD) || { echo \"Cannot determine origin's default branch. Run: git remote set-head origin -a\" >&2; return 1; }; default_branch=${default_ref#origin/}; branch=${1:-$default_branch}; git fetch origin && git branch -f \"$branch\" \"origin/$branch\"; }; f"
+    # rm-merged - see: https://adamj.eu/tech/2022/10/30/git-how-to-clean-up-squash-merged-branches/
+    rm-merged = !git branch --format '%(refname:short) %(upstream:track)' | awk '$2 == \"[gone]\" { print $1 }' | xargs -r git branch -D
+[color]
+    branch = auto
+    diff = auto
+    interactive = auto
+    status = auto
+[interactive]
+    diffFilter = delta --color-only
+[include]
+    path = {{ .chezmoi.homeDir }}/.config/delta/themes
+[delta]
+    features = mmo

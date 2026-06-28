@@ -1,0 +1,147 @@
+"=================================[ GENERAL STUFF ]==================================
+
+Plug 'easymotion/vim-easymotion'
+
+let mapleader=","          " Personal command prefix
+set relativenumber
+
+scriptencoding utf-8         " Character encoding for this file
+
+" allow cursor to move where there is no text in visual block mode
+if has('virtualedit')
+    set virtualedit=block
+endif
+
+" Save when losing focus
+augroup save_on_focus_lost
+    au!
+    au FocusLost * :silent! wall
+augroup END
+
+" Undo settings
+set noundofile
+
+"=================================[ WILD IGNORES ]===================================
+
+" Insert current time/date
+nnoremap <Leader>D :r!date<cr>
+
+" Where are we?
+nnoremap <Leader>P :!pwd<cr>
+
+" Sort lines
+vnoremap <Leader>S :!sort<cr>
+
+" Quickly leave insertmode
+imap jk <Esc>
+
+" Quickly save all buffers
+nnoremap <Leader>w :wa<cr>
+
+" Quickly exit
+nnoremap <C-q> :wqa<cr>
+
+" Navigation on jklö (for german qwertz keyboard layout!)
+noremap ö l
+noremap l k
+noremap k j
+noremap j h
+
+" Adapt the customized navigation to window navigation, too
+noremap <Space>ö <c-w>l
+noremap <Space>l <c-w>k
+noremap <Space>k <c-w>j
+noremap <Space>j <c-w>h
+
+nnoremap <C-left>  :vs<cr>
+nnoremap <C-right> :vs<cr>
+nnoremap <C-up>    :sp<cr>
+nnoremap <C-down>  :sp<cr>
+
+" Remove search match highlighting
+noremap <silent> <Leader><space> :noh<cr>:call clearmatches()<cr>
+
+" Keep search matches in the middle of the window
+nnoremap n nzzzv
+nnoremap N Nzzzv
+nnoremap { {zz
+nnoremap } }zz
+
+" No german Sonderzeichen ...
+inoremap ü ue
+inoremap ö oe
+inoremap ä ae
+inoremap ß ss
+
+" ... or only if really necessary.
+inoremap üü ü
+inoremap öö ö
+inoremap ää ä
+inoremap ßß ß
+
+" Jump to beginning/end of line
+noremap H ^
+noremap L $
+vnoremap L g_
+
+" Surround word under cursor with \" or \'
+nnoremap <Leader>" viw<esc>a"<esc>hbi"<esc>lel
+nnoremap <Leader>' viw<esc>a'<esc>hbi'<esc>lel
+
+" [S]plit lines (as counterpart to [J]oin lines)
+nnoremap S i<cr><esc>^mwgk:silent! s/\v +$//<cr>:noh<cr>`w
+
+" Better indentation
+vnoremap < <gvh
+vnoremap > >gvh
+
+" Copy current file path to clipboard
+nnoremap <leader>% :call CopyCurrentFilePath()<CR>
+function! CopyCurrentFilePath()
+    let @+ = expand('%:p')
+    echo @+
+endfunction
+
+" Incremental search for visual selection
+function! s:VSetSearch()
+    let temp = @s
+    norm! gv"sy
+    let @/ = '\V' . substitute(escape(@s, '/\'), '\n', '\\n', 'g')
+    let @s = temp
+endfunction
+
+" incremental forward/backward search for visual selection
+xnoremap * :<C-u>call <SID>VSetSearch()<CR>/<C-R>=@/<CR><CR>
+xnoremap # :<C-u>call <SID>VSetSearch()<CR>?<C-R>=@/<CR><CR>
+
+" Toggle between absolute/relative line numbers
+" ---------------------------------------------
+function! ToggleNumber()
+    if(&relativenumber)
+        set norelativenumber
+    else
+        set relativenumber
+    endif
+    set number
+endfunc
+
+" Toggle vertical bar for cursorposition
+" --------------------------------------
+let g:cursorcolumn=0
+function! ToggleCursorColumn()
+    if(g:cursorcolumn)
+        set nocursorcolumn
+        "set completeopt=menuone,preview
+        let g:cursorcolumn=0
+    else
+        set cursorcolumn
+        "set completeopt=menuone
+        let g:cursorcolumn=1
+    endif
+endfunction
+
+" Toggle between absolute/relative line numbers
+nnoremap <C-l> :call ToggleNumber()<CR>
+
+" Toggle cursor column
+nnoremap <C-k> :call ToggleCursorColumn()<CR>

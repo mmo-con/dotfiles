@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set --
+for key in "$HOME/.ssh/id_rsa" "$HOME/.ssh/id_ed25519"; do
+    [ -r "$key" ] && set -- "$@" "$key"
+done
+
+[ "$#" -gt 0 ] || exit 0
+
+exec env LANG=C SSH_ASKPASS=/usr/bin/ksshaskpass SSH_ASKPASS_REQUIRE=force \
+    ssh-add -t 12h "$@"

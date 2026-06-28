@@ -1,0 +1,17 @@
+encryption = "age"
+[data]
+  {{- if eq .chezmoi.osRelease.id "debian" }}
+  email = "markus-moll@siemens.com"
+  {{- else }}
+  email = "markus.moll.contact@gmail.com"
+  {{- end }}
+  name = "Markus Moll"
+[age]
+    identity = "{{ .chezmoi.homeDir }}/.age-key.txt"
+    recipient = "age1hy3yhdszpenpz59ezxu0vyu5dsmz8zs8xk4dzzqlsgp3xryq7gpqtagxah"
+[edit]
+  command = "nvim"
+[diff]
+  command = "delta"
+  pager = "delta"
+  args = ["--side-by-side"]
