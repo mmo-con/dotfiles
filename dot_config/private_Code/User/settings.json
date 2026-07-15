@@ -28,7 +28,7 @@
     "cmake.configureOnOpen": true,
     "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
     "cmake.generator": "Ninja",
-    "cmake.cmakePath": "/home/$env{USER}/hafas/src/toolchaininstaller/gcc14/cmake/3.31.11/bin/cmake",
+    "cmake.cmakePath": "${env:HOME}/hafas/src/toolchaininstaller/gcc14/cmake/3.31.11/bin/cmake",
     "cmake.sourceDirectory": "${workspaceFolder}",
     "cmake.useCMakePresets": "always",
     "debug.breakpointsView.presentation": "tree",
