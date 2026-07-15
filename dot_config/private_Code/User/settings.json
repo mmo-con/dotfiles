@@ -1,0 +1,101 @@
+{
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "C_Cpp.clang_format_fallbackStyle": "",
+    "C_Cpp.autocomplete": "disabled",
+    "C_Cpp.errorSquiggles": "disabled",
+    "C_Cpp.default.intelliSenseMode": "clang-x64",
+    "C_Cpp.clang_format_style": "file",
+    "C_Cpp.formatting": "clangFormat",
+    "chat.tools.edits.autoApprove": {
+        "**/*": true
+    },
+    "chat.tools.terminal.autoApprove": {
+        "/.*/": true
+    },
+    "chat.tools.urls.autoApprove": {
+        "*": true
+    },
+    "clangd.onConfigChanged": "restart",
+    "clangd.arguments": [
+        "--clang-tidy",
+        "--header-insertion=never",
+        "--completion-style=detailed",
+        "--background-index",
+        "--background-index-priority=background",
+        "--compile-commands-dir=${workspaceFolder}"
+    ],
+    "cmake.automaticReconfigure": true,
+    "cmake.configureOnOpen": true,
+    "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
+    "cmake.generator": "Ninja",
+    "cmake.cmakePath": "/home/$env{USER}/hafas/src/toolchaininstaller/gcc14/cmake/3.31.11/bin/cmake",
+    "cmake.sourceDirectory": "${workspaceFolder}",
+    "cmake.useCMakePresets": "always",
+    "debug.breakpointsView.presentation": "tree",
+    "diffEditor.ignoreTrimWhitespace": false,
+    "editor.autoIndent": "full",
+    "editor.detectIndentation": false,
+    "editor.fontFamily": "'CaskaydiaMono Nerd Font', 'monospace'",
+    "editor.fontSize": 14,
+    "editor.inlayHints.enabled": "off",
+    "files.insertFinalNewline": true,
+    "editor.insertSpaces": true,
+    "editor.mouseWheelZoom": true,
+    "editor.renderWhitespace": "boundary",
+    "editor.tabSize": 4,
+    "files.encoding": "utf8",
+    "files.exclude": {
+        "**/.git": true,
+        "**/.cache": true,
+        "**/.idea": true
+    },
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "git.openRepositoryInParentFolders": "never",
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "gitlens.ai.model": "vscode",
+    "gitlens.ai.vscode.model": "copilot:gpt-4.1",
+    "gitlens.plusFeatures.enabled": false,
+    "git-graph.maxDepthOfRepoSearch": 1,
+    "prettier.tabWidth": 4,
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "**/*.code-search": true,
+        "**/build*": true,
+        "**/cmake-build*": true
+    },
+    "terminal.integrated.defaultProfile.linux": "zsh",
+    "testMate.cpp.test.advancedExecutables": [
+        {
+            "pattern": "{build-server-7-5-0}*/**/*{test,Test,TEST}*",
+            "env": {
+                "LD_LIBRARY_PATH": "/home/$env{USER}/hafas/src/toolchaininstaller/gcc14/gcc/14.3.0/toolchains/x86_64-pc-linux-gnu/x86_64-pc-linux-gnu/lib64"
+            }
+        }
+    ],
+    "workbench.colorTheme": "Aura Dracula Spirit (Soft)",
+    "workbench.iconTheme": "catppuccin-mocha",
+    "editor.tokenColorCustomizations": {
+        "textMateRules": [
+            {
+                "scope": "googletest.failed",
+                "settings": {
+                    "foreground": "#f00"
+                }
+            },
+            {
+                "scope": "googletest.passed",
+                "settings": {
+                    "foreground": "#0f0"
+                }
+            },
+            {
+                "scope": "googletest.run",
+                "settings": {
+                    "foreground": "#0f0"
+                }
+            }
+        ]
+    }
+}
