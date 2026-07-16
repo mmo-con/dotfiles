@@ -1,3 +1,9 @@
+alias -g F='| fzf'
+alias -g G='| rg'
+alias -g J='| jq'
+alias -g X='| xq'
+alias -g Y='| yq'
+
 alias ls='eza --group-directories-first --icons=always'
 alias ld='eza --only-dirs --icons=always'
 alias ll='eza --long --group --group-directories-first --time-style=long-iso --icons=always --git'
