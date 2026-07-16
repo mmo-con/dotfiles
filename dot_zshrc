@@ -1,5 +1,7 @@
 umask 022
 
+autoload -Uz zmv
+
 export ZSH_CFG_DIR="$HOME/.config/zsh"
 
 [[ ! -f "$ZSH_CFG_DIR/environment.zsh" ]] || source "$ZSH_CFG_DIR/environment.zsh"
