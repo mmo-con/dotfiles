@@ -49,3 +49,12 @@ alias rmd='rm -rf'
 alias rmj2='rms ".j2"'
 alias scat='sops --decrypt'
 alias vim='nvim'
+
+# OS dependent aliases
+{{- if eq .chezmoi.osRelease.id "debian" }}
+alias up='sudo apt update && sudo apt full-upgrade && sudo apt autoremove --purge && sudo apt clean'
+{{- else if eq .chezmoi.osRelease.id "cachyos" }}
+alias up='sudo pacman -Syu'
+{{- else }}
+alias up='echo "Unknown operating system - no update alias available."'
+{{- end }}
