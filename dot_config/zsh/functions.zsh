@@ -258,3 +258,69 @@ function fsys() {
         esac
     fi
 }
+
+# Update branches of a Git repository from the remote, with optional filtering by branch name pattern.
+function git_update_branches() {
+    emulate -L zsh
+    setopt localoptions nounset pipefail
+
+    local pattern="${1:-}"
+    local remote="origin"
+    local current_branch
+    local branches
+    local worktree_status
+    local command_status
+    local update_failed=0
+
+    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        echo "Error: You are not inside a Git repository." >&2
+        return 1
+    fi
+    if ! worktree_status=$(git status --porcelain=v1 --untracked-files=normal); then
+        echo "Error: Could not determine the repository status." >&2
+        return 1
+    fi
+    if [[ -n "$worktree_status" ]]; then
+        echo "Error: You have uncommitted changes. Please commit or stash them before updating branches." >&2
+        return 1
+    fi
+
+    echo "Fetching latest changes from remote '${remote}'..."
+    git fetch --all --prune || return $?
+
+    current_branch=$(git branch --show-current) || return $?
+
+    if [[ -n "$pattern" ]]; then
+        branches=$(git for-each-ref --format='%(refname:short)' refs/heads/ | grep -E "$pattern")
+    else
+        branches=$(git for-each-ref --format='%(refname:short)' refs/heads/) || return $?
+    fi
+    if [[ -z "$branches" ]]; then
+        echo "No branches found matching pattern: '${pattern}'"
+        return 0
+    fi
+
+    for branch in ${(f)branches}; do
+        if [[ "$branch" == "$current_branch" ]]; then
+            echo "Updating current active branch: $branch"
+            git merge --ff-only "${remote}/${branch}"
+            command_status=$?
+            (( command_status == 130 )) && return 130
+            if (( command_status != 0 )); then
+                echo "Warning: Could not fast-forward $branch. You might have divergent changes." >&2
+                update_failed=1
+            fi
+        else
+            echo "Updating background branch: $branch"
+            git fetch "$remote" "${branch}:${branch}"
+            command_status=$?
+            (( command_status == 130 )) && return 130
+            if (( command_status != 0 )); then
+                echo "Warning: Could not update $branch from $remote." >&2
+                update_failed=1
+            fi
+        fi
+    done
+
+    return $update_failed
+}
