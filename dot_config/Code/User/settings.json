@@ -101,5 +101,6 @@
                 }
             }
         ]
-    }
+    },
+    "redhat.telemetry.enabled": false
 }
