@@ -25,11 +25,9 @@ compile_commands.json
 # Virtuelle Umgebungen
 .venv/
 venv/
-env/
 
 # uv spezifische Dateien
 .uv/
-uv.lock
 
 # Python Bytecode
 __pycache__/
