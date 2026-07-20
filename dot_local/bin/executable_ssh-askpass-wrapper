@@ -1,0 +1,16 @@
+#!/bin/sh
+
+message=${1-}
+case $message in
+    *"(yes/no"*|*"continue connecting"*)
+        if /usr/bin/kdialog \
+            --yesno "$message" \
+            --title "SSH host key confirmation"; then
+            printf '%s\n' yes
+            exit 0
+        fi
+        exit 1
+        ;;
+esac
+
+exec /usr/bin/ksshaskpass "$message"
