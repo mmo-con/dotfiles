@@ -1,0 +1,8 @@
+Host *
+    ServerAliveInterval 30
+    ServerAliveCountMax 3
+    HashKnownHosts no
+    IdentitiesOnly no
+    AddKeysToAgent yes
+
+Include ~/.ssh/config.work
