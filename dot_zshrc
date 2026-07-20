@@ -8,8 +8,6 @@ export ZSH_CFG_DIR="$HOME/.config/zsh"
 [[ ! -f "$ZSH_CFG_DIR/oh-my-zsh.zsh" ]]   || source "$ZSH_CFG_DIR/oh-my-zsh.zsh"
 [[ ! -f "$ZSH_CFG_DIR/alias.zsh" ]]       || source "$ZSH_CFG_DIR/alias.zsh"
 [[ ! -f "$ZSH_CFG_DIR/functions.zsh" ]]   || source "$ZSH_CFG_DIR/functions.zsh"
-
-[[ ! -f "$ZSH_CFG_DIR/local.zsh" ]]       || source "$ZSH_CFG_DIR/local.zsh"
 [[ ! -f "$ZSH_CFG_DIR/work.zsh" ]]        || source "$ZSH_CFG_DIR/work.zsh"
 
 eval "$(starship init zsh)"
