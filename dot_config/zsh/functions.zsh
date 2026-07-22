@@ -105,6 +105,11 @@ function gpgdec() {
         return 1
     fi
 
+    if [[ "$1" != *.gpg ]]; then
+        echo "Input file must have a .gpg extension." >&2
+        return 1
+    fi
+
     if [[ ! -f "$1" ]]; then
         echo "File not found: $1" >&2
         return 1
