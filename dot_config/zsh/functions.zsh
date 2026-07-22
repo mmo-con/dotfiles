@@ -75,6 +75,51 @@ function copyssh() {
     return 1
 }
 
+function gpgenc() {
+    if [[ $# -ne 1 ]]; then
+        echo "Usage: gpgenc <file>" >&2
+        return 1
+    fi
+
+    if [[ ! -f "$1" ]]; then
+        echo "File not found: $1" >&2
+        return 1
+    fi
+
+    if [[ -e "$1.gpg" ]]; then
+        echo "Output already exists: $1.gpg" >&2
+        return 1
+    fi
+
+    gpg --symmetric \
+        --cipher-algo AES256 \
+        --compress-algo none \
+        --s2k-mode 3 \
+        --s2k-digest-algo SHA512 \
+        --s2k-count 65011712 "$1"
+}
+
+function gpgdec() {
+    if [[ $# -ne 1 ]]; then
+        echo "Usage: gpgdec <file.gpg>" >&2
+        return 1
+    fi
+
+    if [[ ! -f "$1" ]]; then
+        echo "File not found: $1" >&2
+        return 1
+    fi
+
+    local outfile="${1%.gpg}"
+
+    if [[ -e "$outfile" ]]; then
+        echo "Output already exists: $outfile" >&2
+        return 1
+    fi
+
+    gpg --decrypt --output "$outfile" "$1"
+}
+
 # Backup (copy) of a file
 function bak() {
     cp -av -- "$1" "$1.$(date +%Y%m%d-%H%M%S).bak"
