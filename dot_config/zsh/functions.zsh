@@ -75,6 +75,7 @@ function copyssh() {
     return 1
 }
 
+# gpg encoding wrapper
 function gpgenc() {
     if [[ $# -ne 1 ]]; then
         echo "Usage: gpgenc <file>" >&2
@@ -99,6 +100,7 @@ function gpgenc() {
         --s2k-count 65011712 "$1"
 }
 
+# gpg decoding wrapper
 function gpgdec() {
     if [[ $# -ne 1 ]]; then
         echo "Usage: gpgdec <file.gpg>" >&2
