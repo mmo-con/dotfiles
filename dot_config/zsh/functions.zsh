@@ -127,6 +127,161 @@ function gpgdec() {
     gpg --decrypt --output "$outfile" "$1"
 }
 
+# Create password-protected 7z archive from files or a directory.
+secure_archive() {
+    emulate -L zsh
+    setopt nounset pipefail
+
+    local archive="" archive_path base contents_dir="" rc source ts
+    local contents_mode=0
+    local -a sources
+
+    while (( $# > 0 )); do
+        case "$1" in
+            -o|--output)
+                if (( $# < 2 )) || [[ -z "$2" ]]; then
+                    print -u2 "Error: $1 requires an archive name."
+                    return 64
+                fi
+                if [[ -n "$archive" ]]; then
+                    print -u2 "Error: The output option may only be specified once."
+                    return 64
+                fi
+                archive="$2"
+                shift 2
+                ;;
+            --contents)
+                if (( $# < 2 )) || [[ -z "$2" ]]; then
+                    print -u2 "Error: --contents requires a directory."
+                    return 64
+                fi
+                if (( contents_mode )); then
+                    print -u2 "Error: --contents may only be specified once."
+                    return 64
+                fi
+                contents_mode=1
+                contents_dir="$2"
+                shift 2
+                ;;
+            --)
+                shift
+                sources+=("$@")
+                break
+                ;;
+            -*)
+                print -u2 "Error: Unknown option: $1"
+                return 64
+                ;;
+            *)
+                sources+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    if (( contents_mode && ${#sources[@]} > 0 )); then
+        print -u2 "Error: --contents cannot be combined with other sources."
+        return 64
+    fi
+
+    if (( ! contents_mode && ${#sources[@]} == 0 )); then
+        print -u2 "Usage: secure_archive [-o <archive.7z>] <source>..."
+        print -u2 "       secure_archive [-o <archive.7z>] --contents <directory>"
+        return 64
+    fi
+
+    if (( contents_mode )); then
+        if [[ ! -e "$contents_dir" ]]; then
+            print -u2 "Error: '$contents_dir' does not exist."
+            return 66
+        fi
+        if [[ ! -d "$contents_dir" ]]; then
+            print -u2 "Error: '$contents_dir' is not a directory."
+            return 65
+        fi
+        if [[ ! -r "$contents_dir" || ! -x "$contents_dir" ]]; then
+            print -u2 "Error: '$contents_dir' is not readable or searchable."
+            return 77
+        fi
+    else
+        for source in "${sources[@]}"; do
+            if [[ ! -e "$source" ]]; then
+                print -u2 "Error: '$source' does not exist."
+                return 66
+            fi
+            if [[ ! -f "$source" && ! -d "$source" ]]; then
+                print -u2 "Error: '$source' is neither a regular file nor a directory."
+                return 65
+            fi
+            if [[ ! -r "$source" || ( -d "$source" && ! -x "$source" ) ]]; then
+                print -u2 "Error: '$source' is not readable or searchable."
+                return 77
+            fi
+        done
+    fi
+
+    if [[ -z "$archive" ]]; then
+        if (( contents_mode )); then
+            base="${contents_dir:a:t}"
+        elif (( ${#sources[@]} == 1 )); then
+            base="${sources[1]:a:t}"
+        else
+            base="archive"
+        fi
+        [[ -n "$base" ]] || base="root"
+
+        ts="$(date +%Y%m%d-%H%M%S)" || {
+            print -u2 "Error: Could not generate a timestamp."
+            return 1
+        }
+        archive="${base}_${ts}.7z"
+    elif [[ "$archive" != *.7z ]]; then
+        archive+=".7z"
+    fi
+
+    if [[ -e "$archive" || -L "$archive" ]]; then
+        print -u2 "Error: Destination '$archive' already exists."
+        return 73
+    fi
+
+    archive_path="${archive:a}"
+
+    # -p      => prompt for a password
+    # -mx=9   => maximum compression
+    # -mhe=on => encrypt file names as well
+    # -bb0    => suppress informational messages
+    # -bso0   => suppress standard output while preserving errors
+    print "Enter password (input will not be echoed):"
+    if (( contents_mode )); then
+        (
+            cd -- "$contents_dir" || exit 72
+            7z a -p -mx=9 -mhe=on -bb0 -bso0 -- "$archive_path" .
+        )
+        rc=$?
+    else
+        7z a -p -mx=9 -mhe=on -bb0 -bso0 -- "$archive_path" "${sources[@]}"
+        rc=$?
+    fi
+
+    case "$rc" in
+        0)
+            print "Done: $archive"
+            ;;
+        1)
+            print -u2 "Warning: The archive was created, but 7z reported warnings."
+            print -u2 "Please review the output for: $archive"
+            return 1
+            ;;
+        *)
+            print -u2 "Error: 7z failed with exit code $rc."
+            if [[ -e "$archive" ]]; then
+                print -u2 "Note: An incomplete archive may have been created: $archive"
+            fi
+            return "$rc"
+            ;;
+    esac
+}
+
 # Backup (copy) of a file
 function bak() {
     cp -av -- "$1" "$1.$(date +%Y%m%d-%H%M%S).bak"
