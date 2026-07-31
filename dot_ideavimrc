@@ -1,7 +1,5 @@
 "=================================[ GENERAL STUFF ]==================================
 
-Plug 'easymotion/vim-easymotion'
-
 let mapleader=","          " Personal command prefix
 set relativenumber
 
