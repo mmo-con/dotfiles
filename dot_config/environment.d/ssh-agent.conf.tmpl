@@ -1,0 +1,1 @@
+SSH_AUTH_SOCK=${XDG_RUNTIME_DIR}/{{ if eq .chezmoi.osRelease.id "debian" }}openssh_agent{{ else }}ssh-agent.socket{{ end }}
