@@ -10,5 +10,8 @@ DimWhenInactive=true
 Name=mmo
 Parent=FALLBACK/
 
+[Scrolling]
+HistorySize=5000
+
 [Terminal Features]
 AnimatingCursorEnabled=true

@@ -1,7 +1,7 @@
 git:
-  pagers:
+  diffRenderers:
     - colorArg: always
-      pager: delta --paging=never --side-by-side
+      command: delta --paging=never --side-by-side
 gui:
   theme:
     activeBorderColor:
@@ -29,6 +29,5 @@ gui:
       - '#ed8796'
     defaultFgColor:
       - '#cad3f5'
-
   authorColors:
     '*': '#b7bdf8'
