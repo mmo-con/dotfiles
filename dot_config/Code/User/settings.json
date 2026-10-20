@@ -51,8 +51,16 @@
     },
     "files.trimFinalNewlines": true,
     "files.trimTrailingWhitespace": true,
+    "git.blame.editorDecoration.enabled": false,
     "git.openRepositoryInParentFolders": "never",
     "github.copilot.nextEditSuggestions.enabled": true,
+    "github.copilot.enable": {
+        "*": false,
+        "plaintext": false,
+        "markdown": false,
+        "scminput": false
+    },
+    "gitlens.ai.enabled": false,
     "gitlens.plusFeatures.enabled": false,
     "git-graph.maxDepthOfRepoSearch": 1,
     "[json]": {
@@ -70,7 +78,7 @@
     "terminal.integrated.defaultProfile.linux": "zsh",
     "testMate.cpp.test.advancedExecutables": [
         {
-            "pattern": "{build-server-7-5-0}*/**/*{test,Test,TEST}*",
+            "pattern": "{build-server-14-3-0}*/**/*{test,Test,TEST}*",
             "env": {
                 "LD_LIBRARY_PATH": "/home/$env{USER}/hafas/src/toolchaininstaller/gcc14/gcc/14.3.0/toolchains/x86_64-pc-linux-gnu/x86_64-pc-linux-gnu/lib64"
             }
@@ -100,5 +108,15 @@
             }
         ]
     },
-    "redhat.telemetry.enabled": false
+    "redhat.telemetry.enabled": false,
+    "clangd.path": "/home/z003wz6c/.config/Code/User/globalStorage/llvm-vs-code-extensions.vscode-clangd/install/22.1.6/clangd_22.1.6/bin/clangd",
+    "extensions.experimental.affinity": {
+        "asvetliakov.vscode-neovim": 1
+    },
+    "vscode-neovim.statusLineItems": ["mode", "cmd", "msg"],
+    "vscode-neovim.compositeKeys": {
+        "jk": {
+            "command": "vscode-neovim.escape",
+        }
+    }
 }
