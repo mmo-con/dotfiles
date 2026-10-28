@@ -15,7 +15,7 @@
     "chat.tools.urls.autoApprove": {
         "*": true
     },
-    "clangd.path": "/home/z003wz6c/.config/Code/User/globalStorage/llvm-vs-code-extensions.vscode-clangd/install/22.1.6/clangd_22.1.6/bin/clangd",
+    "clangd.path": "${env:HOME}/.config/Code/User/globalStorage/llvm-vs-code-extensions.vscode-clangd/install/23.1.0/clangd_23.1.0/bin/clangd",
     "clangd.onConfigChanged": "restart",
     "clangd.arguments": [
         "--clang-tidy",
@@ -104,7 +104,7 @@
         {
             "pattern": "{build-server-14-3-0}*/**/*{test,Test,TEST}*",
             "env": {
-                "LD_LIBRARY_PATH": "/home/$env{USER}/hafas/src/toolchaininstaller/gcc14/gcc/14.3.0/toolchains/x86_64-pc-linux-gnu/x86_64-pc-linux-gnu/lib64"
+                "LD_LIBRARY_PATH": "$env{HOME}/hafas/src/toolchaininstaller/gcc14/gcc/14.3.0/toolchains/x86_64-pc-linux-gnu/x86_64-pc-linux-gnu/lib64"
             }
         }
     ],
