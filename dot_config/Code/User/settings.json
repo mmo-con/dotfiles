@@ -15,6 +15,7 @@
     "chat.tools.urls.autoApprove": {
         "*": true
     },
+    "clangd.path": "/home/z003wz6c/.config/Code/User/globalStorage/llvm-vs-code-extensions.vscode-clangd/install/22.1.6/clangd_22.1.6/bin/clangd",
     "clangd.onConfigChanged": "restart",
     "clangd.arguments": [
         "--clang-tidy",
@@ -43,6 +44,28 @@
     "editor.mouseWheelZoom": true,
     "editor.renderWhitespace": "boundary",
     "editor.tabSize": 4,
+    "editor.tokenColorCustomizations": {
+        "textMateRules": [
+            {
+                "scope": "googletest.failed",
+                "settings": {
+                    "foreground": "#f00"
+                }
+            },
+            {
+                "scope": "googletest.passed",
+                "settings": {
+                    "foreground": "#0f0"
+                }
+            },
+            {
+                "scope": "googletest.run",
+                "settings": {
+                    "foreground": "#0f0"
+                }
+            }
+        ]
+    },
     "files.encoding": "utf8",
     "files.exclude": {
         "**/.git": true,
@@ -68,6 +91,7 @@
     },
     "prettier.tabWidth": 4,
     "python.analysis.typeCheckingMode": "standard",
+    "redhat.telemetry.enabled": false,
     "search.exclude": {
         "**/node_modules": true,
         "**/bower_components": true,
@@ -86,30 +110,6 @@
     ],
     "workbench.colorTheme": "Aura Dracula Spirit (Soft)",
     "workbench.iconTheme": "catppuccin-mocha",
-    "editor.tokenColorCustomizations": {
-        "textMateRules": [
-            {
-                "scope": "googletest.failed",
-                "settings": {
-                    "foreground": "#f00"
-                }
-            },
-            {
-                "scope": "googletest.passed",
-                "settings": {
-                    "foreground": "#0f0"
-                }
-            },
-            {
-                "scope": "googletest.run",
-                "settings": {
-                    "foreground": "#0f0"
-                }
-            }
-        ]
-    },
-    "redhat.telemetry.enabled": false,
-    "clangd.path": "/home/z003wz6c/.config/Code/User/globalStorage/llvm-vs-code-extensions.vscode-clangd/install/22.1.6/clangd_22.1.6/bin/clangd",
     "extensions.experimental.affinity": {
         "asvetliakov.vscode-neovim": 1
     },
