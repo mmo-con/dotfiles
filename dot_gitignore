@@ -4,6 +4,9 @@ build*/
 cmake-build-*/
 bin/
 out/
+node/
+node_modules/
+target/
 
 # CMake generierte Dateien
 CMakeCache.txt
