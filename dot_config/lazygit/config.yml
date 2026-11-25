@@ -1,3 +1,5 @@
+promptToReturnFromSubprocess: false
+
 git:
   diffRenderers:
     - colorArg: always
